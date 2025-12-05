@@ -62,7 +62,17 @@ jobs:
 
       - name: Create google-services.json
         run: |
-          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/google-services.json
+          echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > app/google-services.json
+
+      - name: Validate google-services.json
+        run: |
+          if ! python3 -m json.tool app/google-services.json > /dev/null 2>&1; then
+            echo "❌ google-services.json is not valid JSON!"
+            echo "First 500 chars:"
+            head -c 500 app/google-services.json
+            exit 1
+          fi
+          echo "✅ google-services.json is valid JSON ($(wc -c < app/google-services.json) bytes)"
 
       # NOTE: Quality gates run in CI workflow, not duplicated here
       # This workflow assumes CI has passed (enforced by branch protection)

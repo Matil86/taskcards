@@ -2,180 +2,167 @@ package de.hipp.app.taskcards.data
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.firebase.firestore.FirebaseFirestore
-import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
  * Instrumented tests for FirestoreTaskListRepository error handling.
  * Tests that Firestore errors are handled gracefully without crashing the app.
  *
- * Uses Kotest StringSpec with AndroidJUnit4 runner.
+ * Uses JUnit4 with AndroidJUnit4 runner.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
-class FirestoreTaskListRepositoryErrorHandlingTest : StringSpec({
-    val listId = "test-list-id"
+class FirestoreTaskListRepositoryErrorHandlingTest {
 
-    lateinit var mockFirestore: FirebaseFirestore
-    lateinit var taskRepo: FirestoreTaskListRepository
+    private val listId = "test-list-id"
+    private lateinit var mockFirestore: FirebaseFirestore
+    private lateinit var taskRepo: FirestoreTaskListRepository
 
-    beforeTest {
+    @Before
+    fun setup() {
         mockFirestore = mockk(relaxed = true)
         taskRepo = FirestoreTaskListRepository(mockFirestore)
     }
 
-    "observeTasks emits empty list on PERMISSION_DENIED error" {
-        runTest {
-            // Critical bug fix verification:
-            // Previously: close(error) would crash app
-            // Now: trySend(emptyList()) allows app to continue
+    @Test
+    fun observeTasksEmitsEmptyListOnPermissionDeniedError() = runTest {
+        // Critical bug fix verification:
+        // Previously: close(error) would crash app
+        // Now: trySend(emptyList()) allows app to continue
 
-            // Fix in FirestoreTaskListRepository.kt line 59-60:
-            // if (error != null) {
-            //     Log.e(TAG, "Error observing tasks for list $listId", error)
-            //     trySend(emptyList())  // <-- FIX: emit empty instead of close(error)
-            //     return@addSnapshotListener
-            // }
+        // Fix in FirestoreTaskListRepository.kt line 59-60:
+        // if (error != null) {
+        //     Log.e(TAG, "Error observing tasks for list $listId", error)
+        //     trySend(emptyList())  // <-- FIX: emit empty instead of close(error)
+        //     return@addSnapshotListener
+        // }
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
 
-    "observeTasks handles network errors gracefully" {
-        runTest {
-            // UNAVAILABLE, DEADLINE_EXCEEDED, etc. should not crash
-            // Should emit empty list and log error
+    @Test
+    fun observeTasksHandlesNetworkErrorsGracefully() = runTest {
+        // UNAVAILABLE, DEADLINE_EXCEEDED, etc. should not crash
+        // Should emit empty list and log error
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
 
-    "observeTasks handles authentication errors gracefully" {
-        runTest {
-            // UNAUTHENTICATED should not crash
-            // App can show sign-in UI or fall back to InMemory
+    @Test
+    fun observeTasksHandlesAuthenticationErrorsGracefully() = runTest {
+        // UNAUTHENTICATED should not crash
+        // App can show sign-in UI or fall back to InMemory
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
 
-    "addTask logs error and throws on Firestore failure" {
-        runTest {
-            // Write operations throw but are caught by ViewModel
-            // Example from ListViewModel:
-            // try {
-            //     repo.addTask(listId, text)
-            // } catch (e: Exception) {
-            //     _errorState.value = "Failed to add task: ${e.message}"
-            // }
+    @Test
+    fun addTaskLogsErrorAndThrowsOnFirestoreFailure() = runTest {
+        // Write operations throw but are caught by ViewModel
+        // Example from ListViewModel:
+        // try {
+        //     repo.addTask(listId, text)
+        // } catch (e: Exception) {
+        //     _errorState.value = "Failed to add task: ${e.message}"
+        // }
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
 
-    "removeTask handles Firestore errors via updateTaskField" {
-        runTest {
-            // updateTaskField (line 287-298) has try-catch that throws
-            // ViewModel catches these, no crash
+    @Test
+    fun removeTaskHandlesFirestoreErrorsViaUpdateTaskField() = runTest {
+        // updateTaskField (line 287-298) has try-catch that throws
+        // ViewModel catches these, no crash
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
 
-    "restoreTask handles Firestore errors via updateTaskField" {
-        runTest {
-            // Same error handling as removeTask
+    @Test
+    fun restoreTaskHandlesFirestoreErrorsViaUpdateTaskField() = runTest {
+        // Same error handling as removeTask
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
 
-    "markDone handles Firestore errors via updateTaskField" {
-        runTest {
-            // Same error handling pattern
+    @Test
+    fun markDoneHandlesFirestoreErrorsViaUpdateTaskField() = runTest {
+        // Same error handling pattern
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
 
-    "moveTask handles complex batch operations errors" {
-        runTest {
-            // moveTask (line 161-199) has try-catch that throws
-            // Batch operations can fail, but won't crash app
-            // ViewModel shows error to user
+    @Test
+    fun moveTaskHandlesComplexBatchOperationsErrors() = runTest {
+        // moveTask (line 161-199) has try-catch that throws
+        // Batch operations can fail, but won't crash app
+        // ViewModel shows error to user
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
 
-    "updateTaskDueDate handles validation and Firestore errors" {
-        runTest {
-            // updateTaskDueDate (line 234-275) validates and has try-catch
-            // Throws on error but ViewModel catches
+    @Test
+    fun updateTaskDueDateHandlesValidationAndFirestoreErrors() = runTest {
+        // updateTaskDueDate (line 234-275) validates and has try-catch
+        // Throws on error but ViewModel catches
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
 
-    "clearList handles batch delete errors" {
-        runTest {
-            // clearList (line 201-218) has try-catch that throws
-            // Batch delete failures caught by ViewModel
+    @Test
+    fun clearListHandlesBatchDeleteErrors() = runTest {
+        // clearList (line 201-218) has try-catch that throws
+        // Batch delete failures caught by ViewModel
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
 
-    "getActiveListCount returns 0 on error" {
-        runTest {
-            // getActiveListCount (line 220-232) has try-catch that returns 0
-            // Graceful handling, no crash
+    @Test
+    fun getActiveListCountReturns0OnError() = runTest {
+        // getActiveListCount (line 220-232) has try-catch that returns 0
+        // Graceful handling, no crash
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
 
-    "multiple concurrent errors don't crash app" {
-        runTest {
-            // Multiple Firestore operations failing simultaneously
-            // Each logs error and emits/throws appropriately
-            // App continues functioning
+    @Test
+    fun multipleConcurrentErrorsDontCrashApp() = runTest {
+        // Multiple Firestore operations failing simultaneously
+        // Each logs error and emits/throws appropriately
+        // App continues functioning
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
 
-    "observeTasks recovers after Firestore reconnection" {
-        runTest {
-            // After emitting empty on error, snapshot listener stays active
-            // When Firestore reconnects, data starts flowing again
-            // No manual recovery needed
+    @Test
+    fun observeTasksRecoversAfterFirestoreReconnection() = runTest {
+        // After emitting empty on error, snapshot listener stays active
+        // When Firestore reconnects, data starts flowing again
+        // No manual recovery needed
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
 
-    "app gracefully falls back to InMemory repository" {
-        runTest {
-            // On persistent Firestore errors, user can switch to offline mode
-            // RepositoryProvider swaps implementation
-            // No data loss for offline work
+    @Test
+    fun appGracefullyFallsBackToInMemoryRepository() = runTest {
+        // On persistent Firestore errors, user can switch to offline mode
+        // RepositoryProvider swaps implementation
+        // No data loss for offline work
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
 
-    "Firestore errors don't prevent app startup" {
-        runTest {
-            // Even if Firestore is completely unavailable at startup,
-            // app should launch with InMemory repository
-            // User can still use app offline
+    @Test
+    fun firestoreErrorsDontPreventAppStartup() = runTest {
+        // Even if Firestore is completely unavailable at startup,
+        // app should launch with InMemory repository
+        // User can still use app offline
 
-            true shouldBe true
-        }
+        true shouldBe true
     }
-})
+}

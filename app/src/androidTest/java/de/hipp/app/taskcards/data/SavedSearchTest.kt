@@ -2,6 +2,8 @@ package de.hipp.app.taskcards.data
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import de.hipp.app.taskcards.data.preferences.PreferencesRepository
+import de.hipp.app.taskcards.data.preferences.PreferencesRepositoryImpl
 import de.hipp.app.taskcards.model.DueDateRange
 import de.hipp.app.taskcards.model.SavedSearch
 import de.hipp.app.taskcards.model.SearchFilter

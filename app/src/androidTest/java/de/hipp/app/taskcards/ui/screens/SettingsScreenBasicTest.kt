@@ -5,7 +5,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.core.app.ApplicationProvider
-import de.hipp.app.taskcards.data.preferences.PreferencesRepository
+import de.hipp.app.taskcards.data.preferences.PreferencesRepositoryImpl
+import de.hipp.app.taskcards.ui.screens.settings.SettingsScreen
 import de.hipp.app.taskcards.ui.theme.TaskCardsTheme
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers
@@ -59,7 +60,7 @@ class SettingsScreenBasicTest {
         val dataStoreFile = File(context.filesDir, "datastore/settings.preferences_pb")
         dataStoreFile.delete()
 
-        val prefsRepo = PreferencesRepository(context)
+        val prefsRepo = PreferencesRepositoryImpl(context)
 
         // Verify initial state is off
         prefsRepo.highContrastMode.first() shouldBe false

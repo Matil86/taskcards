@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import de.hipp.app.taskcards.data.InMemoryTaskListRepository
+import de.hipp.app.taskcards.ui.screens.cards.CardsScreen
 import de.hipp.app.taskcards.ui.theme.TaskCardsTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.UnconfinedTestDispatcher

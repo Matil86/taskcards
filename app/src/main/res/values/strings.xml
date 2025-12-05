@@ -1,0 +1,286 @@
+<resources>
+    <string name="app_name">TaskCards</string>
+
+    <!-- Navigation -->
+    <string name="nav_cards">Cards</string>
+    <string name="nav_list">List</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_high_contrast_mode">High Contrast Mode</string>
+    <string name="settings_high_contrast_description">Improve accessibility for colorblindness</string>
+
+    <!-- Language Settings -->
+    <string name="settings_language">Language</string>
+    <string name="settings_language_description">Choose app language</string>
+    <string name="select_language">Select Language</string>
+    <string name="language_system">System Default</string>
+    <string name="language_english">English</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_japanese">日本語</string>
+
+    <!-- Cards Screen -->
+    <string name="cards_all_completed">All tasks completed</string>
+    <string name="cards_task_completed">Task completed</string>
+    <string name="cards_complete_task_action">Complete task</string>
+    <string name="cards_draw_first">Draw first card</string>
+    <string name="cards_draw_next">Draw next card</string>
+    <string name="cards_draw_button">Draw Card</string>
+
+    <!-- List Screen -->
+    <string name="list_title">All Tasks</string>
+    <string name="list_load_dialog_title">Load List</string>
+    <string name="list_id_label">List ID</string>
+    <string name="list_id_input_description">List UUID input</string>
+    <string name="list_load_button">Load</string>
+    <string name="list_cancel_button">Cancel</string>
+    <string name="list_load_icon_description">Load another list</string>
+    <string name="list_add_task_label">Add new task</string>
+    <string name="list_add_icon_description">Add task</string>
+    <string name="list_completed_label">Completed</string>
+    <string name="list_removed_label">Removed</string>
+    <string name="list_move_up_action">Move up</string>
+    <string name="list_move_down_action">Move down</string>
+
+    <!-- Due Dates & Reminders -->
+    <string name="due_date_set">Set due date</string>
+    <string name="due_date_clear">Clear due date</string>
+    <string name="due_date_label">Due date</string>
+    <string name="due_date_picker_title">Select due date</string>
+    <string name="due_date_save">Save</string>
+    <string name="due_date_cancel">Cancel</string>
+    <string name="reminder_type_label">Reminder</string>
+    <string name="reminder_none">No reminder</string>
+    <string name="reminder_on_due_date">On due date</string>
+    <string name="reminder_one_day_before">1 day before</string>
+    <string name="reminder_one_week_before">1 week before</string>
+    <string name="overdue_label">Overdue</string>
+    <string name="due_today_label">Due Today</string>
+    <string name="due_this_week_label">This Week</string>
+    <string name="due_later_label">Later</string>
+    <string name="no_due_date_label">No Due Date</string>
+    <string name="settings_reminders_enabled">Enable Reminders</string>
+    <string name="settings_reminders_description">Get notified about upcoming task deadlines</string>
+    <string name="settings_reminder_time">Reminder Time</string>
+    <string name="settings_reminder_time_description">When to show reminder notifications</string>
+    <string name="settings_notification_sound">Notification Sound</string>
+    <string name="settings_notification_sound_description">Play sound for reminder notifications</string>
+    <string name="settings_notification_vibration">Notification Vibration</string>
+    <string name="settings_notification_vibration_description">Vibrate for reminder notifications</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="test_notification_title">Test Reminder</string>
+    <string name="test_notification_message">This is how your task reminders will appear</string>
+    <string name="sort_by_due_date">Sort by due date</string>
+    <string name="sort_by_order">Sort by order</string>
+
+    <!-- Error Messages -->
+    <string name="error_failed_to_update">Failed to update task: %s</string>
+    <string name="error_failed_to_add">Failed to add task: %s</string>
+    <string name="error_failed_to_remove">Failed to remove task: %s</string>
+    <string name="error_failed_to_restore">Failed to restore task: %s</string>
+    <string name="error_failed_to_move">Failed to move task: %s</string>
+    <string name="error_failed_to_save_setting">Failed to save setting: %s</string>
+    <string name="error_failed_to_update_due_date">Failed to update due date: %s</string>
+    <string name="error_notification_permission_denied">Notification permission denied. Please enable notifications in app settings.</string>
+    <string name="error_failed_to_show_notification">Failed to show notification: %s</string>
+
+    <!-- Common Actions -->
+    <string name="action_dismiss">Dismiss</string>
+
+    <!-- Cards Screen - Empty State -->
+    <string name="cards_empty_message">You did all the tasks.</string>
+    <string name="cards_empty_celebration">Nice!!!</string>
+    <string name="cards_empty_hint">Add more tasks in the list to keep the momentum going!</string>
+    <string name="cards_accessibility_all_completed">All tasks completed. You did all the tasks. Nice!</string>
+
+    <!-- Cards Screen - Interactions -->
+    <string name="cards_swipe_hint">Swipe left or right to complete</string>
+    <string name="cards_task_card_description">Top task card. %1$s. Swipe left or right to complete.</string>
+    <string name="cards_deck_accessibility_first">Deck of tasks at the bottom. Swipe up to draw the first card.</string>
+    <string name="cards_deck_accessibility_next">Deck with tasks at the bottom. Swipe up to draw the next card.</string>
+    <string name="cards_deck_count_first_accessibility">Deck with %1$d cards. Swipe up to draw the first card.</string>
+    <string name="cards_deck_count_accessibility">Deck with %1$d cards remaining. Swipe up to draw the next card.</string>
+    <string name="cards_draw_up_arrow">↑</string>
+    <string name="cards_draw_card_label">Draw Card</string>
+
+    <!-- List Screen - Dialogs -->
+    <string name="list_load_dialog_description">Enter a list ID to load and collaborate on shared tasks.</string>
+
+    <!-- List Screen - Task States -->
+    <string name="list_dragging_indicator">Dragging…</string>
+    <string name="list_task_description">Task %1$s</string>
+    <string name="list_task_completed_description">Completed</string>
+    <string name="list_task_active_state">Active</string>
+    <string name="list_task_completed_state">Completed</string>
+    <string name="list_task_removed_state">Removed</string>
+    <string name="list_task_with_state">%1$s. %2$s</string>
+    <string name="list_task_full_description">Task: %1$s. Status: %2$s</string>
+
+    <!-- List Screen - Header -->
+    <string name="list_header_completed">%1$d/%2$d completed</string>
+
+    <!-- List Screen - Input -->
+    <string name="list_add_placeholder">What needs to be done?</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_version">Version %1$s</string>
+
+    <!-- Firebase - Google Sign-In -->
+    <!-- This will be auto-generated by google-services plugin after configuring OAuth in Firebase Console -->
+    <!-- REPLACE THIS with your actual OAuth client ID from google-services.json -->
+    <string name="default_web_client_id" translatable="false">YOUR_WEB_CLIENT_ID_HERE</string>
+
+    <!-- Authentication -->
+    <string name="auth_sign_in_title">Sign In</string>
+    <string name="auth_sign_in_message">Sign in with your Google account to sync tasks across devices</string>
+    <string name="auth_sign_in_button">Sign In with Google</string>
+    <string name="auth_signing_in">Signing in…</string>
+    <string name="auth_error">Sign in failed. Please try again.</string>
+
+    <!-- List Selector Screen -->
+    <string name="list_selector_title">My Lists</string>
+    <string name="list_selector_create_button">Create List</string>
+    <string name="list_selector_create_fab_description">Create new list</string>
+    <string name="list_selector_task_count">%1$d tasks</string>
+    <string name="list_selector_empty_message">No lists yet</string>
+    <string name="list_selector_empty_hint">Tap + to create your first list</string>
+    <string name="list_selector_rename_dialog_title">Rename List</string>
+    <string name="list_selector_delete_dialog_title">Delete List</string>
+    <string name="list_selector_delete_dialog_message">Are you sure you want to delete this list and all its tasks?</string>
+    <string name="list_selector_create_dialog_title">Create New List</string>
+    <string name="list_selector_list_name_label">List name</string>
+    <string name="list_selector_rename_button">Rename</string>
+    <string name="list_selector_delete_button">Delete</string>
+    <string name="list_selector_confirm_button">Confirm</string>
+    <string name="list_selector_list_card_description">List %1$s with %2$d tasks</string>
+    <string name="switch_list">Switch List</string>
+    <string name="error_failed_to_create_list">Failed to create list: %s</string>
+    <string name="error_failed_to_rename_list">Failed to rename list: %s</string>
+    <string name="error_failed_to_delete_list">Failed to delete list: %s</string>
+
+    <!-- Search and Filter -->
+    <string name="search_hint">Search tasks…</string>
+    <string name="search_clear">Clear search</string>
+    <string name="search_no_results">No tasks found</string>
+    <string name="search_no_results_hint">Try adjusting your search or filters</string>
+    <string name="filter_button">Filter tasks</string>
+    <string name="filter_button_with_count">Filter tasks (%1$d active)</string>
+    <string name="filter_title">Filter Tasks</string>
+    <string name="filter_status">Status</string>
+    <string name="filter_due_date">Due Date</string>
+    <string name="filter_clear_all">Clear All</string>
+    <string name="filter_apply">Apply</string>
+    <string name="filter_save_search">Save Search</string>
+    <string name="filter_chip_remove">Remove %1$s filter</string>
+
+    <!-- Saved Searches -->
+    <string name="saved_searches">Saved Searches</string>
+    <string name="saved_search_apply">Apply</string>
+    <string name="saved_search_delete">Delete saved search</string>
+    <string name="save_search_dialog_title">Save Search</string>
+    <string name="save_search_dialog_message">Give this search a name to access it later</string>
+    <string name="save_search_name_label">Search name</string>
+    <string name="save_search_name_hint">e.g., \"High priority work tasks\"</string>
+    <string name="save_search_save">Save</string>
+    <string name="save_search_cancel">Cancel</string>
+    <string name="error_failed_to_save_search">Failed to save search: %s</string>
+    <string name="error_failed_to_delete_search">Failed to delete search: %s</string>
+
+    <!-- Home Screen Widgets -->
+    <string name="widget_task_list_description">Shows your active tasks</string>
+    <string name="widget_quick_add_description">Quickly add tasks from home screen</string>
+    <string name="widget_due_today_description">Shows tasks due today</string>
+    <string name="widget_configure">Configure Widget</string>
+    <string name="widget_tap_to_configure">Tap to configure widget</string>
+    <string name="widget_no_active_tasks">No active tasks</string>
+    <string name="widget_no_tasks_due_today">No tasks due today</string>
+    <string name="widget_overdue_count">%1$d overdue</string>
+    <string name="widget_refresh">Refresh widget</string>
+    <string name="widget_quick_add_title">Quick Add Task</string>
+    <string name="widget_task_added">Task added</string>
+    <string name="widget_no_list_available">No task list available</string>
+
+    <!-- Deep Link Sharing -->
+    <string name="share_task_title">Share Task</string>
+    <string name="share_list_title">Share List</string>
+    <string name="share_button">Share</string>
+    <string name="share_copy_link">Copy</string>
+    <string name="share_qr_code">QR Code</string>
+    <string name="share_link_copied">Link copied to clipboard</string>
+    <string name="share_via_system">Share via…</string>
+
+    <!-- QR Code -->
+    <string name="qr_code_title">QR Code</string>
+    <string name="qr_code_description">QR code for sharing</string>
+    <string name="qr_code_scan_description">Scan this code to import the task or list</string>
+    <string name="qr_code_save_to_gallery">Save to Gallery</string>
+    <string name="qr_code_generating">Generating QR code…</string>
+    <string name="qr_code_generated">QR code generated</string>
+    <string name="qr_code_saved">QR code saved to gallery</string>
+    <string name="qr_code_failed_to_generate">Failed to generate QR code</string>
+    <string name="qr_code_failed_to_save">Failed to save QR code</string>
+    <string name="qr_code_close">Close</string>
+
+    <!-- QR Scanner Screen -->
+    <string name="qr_scanner_title">Scan QR Code</string>
+    <string name="qr_scanner_close">Close scanner</string>
+    <string name="qr_scanner_camera_description">Camera preview for scanning QR codes</string>
+    <string name="qr_scanner_instructions">Point your camera at a QR code to load a shared list</string>
+    <string name="qr_scanner_select_from_gallery">Select from Gallery</string>
+    <string name="qr_scanner_gallery_button_description">Select QR code image from gallery</string>
+    <string name="qr_scanner_permission_title">Camera Permission Required</string>
+    <string name="qr_scanner_permission_message">Camera permission is needed to scan QR codes. Please grant the permission in app settings.</string>
+    <string name="qr_scanner_permission_ok">OK</string>
+
+    <!-- Deep Link Import -->
+    <string name="import_task_title">Import Task?</string>
+    <string name="import_list_title">Import List?</string>
+    <string name="import_task_message">Do you want to import this task?</string>
+    <string name="import_list_message">Do you want to import this list with %1$d tasks?</string>
+    <string name="import_button">Import</string>
+    <string name="import_cancel">Cancel</string>
+    <string name="import_task_success">Task imported successfully!</string>
+    <string name="import_list_success">List imported successfully!</string>
+    <string name="import_failed">Import failed: %1$s</string>
+    <string name="import_invalid_link">Invalid link: %1$s</string>
+    <string name="import_preview_due_date">Due: %1$s</string>
+    <string name="import_preview_tasks">Tasks:</string>
+    <string name="import_preview_more_tasks">… and %1$d more</string>
+
+    <!-- List Loading Notifications -->
+    <string name="list_loaded_success">List loaded: %1$s</string>
+    <string name="list_load_error">Failed to load list: %1$s</string>
+    <string name="qr_scan_success">QR code scanned successfully</string>
+    <string name="qr_scan_invalid">Invalid QR code</string>
+    <string name="qr_scan_processing">Processing QR code…</string>
+
+    <!-- Daily Reminder Notifications -->
+    <string name="daily_reminder_title">Time for tasks!</string>
+    <string name="daily_reminder_message">Hey, you got some tasks left. Do you have time to do one of them?</string>
+    <string name="daily_reminder_message_count">You have %1$d active tasks. Ready to tackle one?</string>
+
+    <!-- Share Errors -->
+    <string name="share_error_no_url">No URL to share</string>
+    <string name="share_error_no_active_tasks">No active tasks to share</string>
+    <string name="share_error_failed_to_generate">Failed to generate share link: %1$s</string>
+
+    <!-- Share List -->
+    <string name="share_list_description">Share list with QR code</string>
+    <string name="generate_qr_code">Generate QR Code</string>
+    <string name="close">Close</string>
+
+    <!-- Accessibility Content Descriptions -->
+    <string name="cd_select_reminder_time">Select reminder time</string>
+    <string name="cd_confirm_time_selection">Confirm time selection</string>
+    <string name="cd_cancel_time_selection">Cancel time selection</string>
+    <string name="cd_language_option">%1$s, %2$s</string>
+    <string name="cd_language_selected">selected</string>
+    <string name="cd_language_not_selected">tap to select</string>
+    <string name="cd_close_language_picker">Close language picker</string>
+    <string name="cd_language_setting">Language %1$s, tap to change</string>
+    <string name="cd_reminder_time_setting">Reminder time %1$s, tap to change</string>
+    <string name="cd_refresh_widget">Refresh</string>
+    <string name="cd_add_task_widget">Add task</string>
+
+</resources>

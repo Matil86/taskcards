@@ -1,0 +1,500 @@
+package de.hipp.app.taskcards.accessibility
+
+import de.hipp.app.taskcards.data.InMemoryCategoryRepository
+import de.hipp.app.taskcards.data.InMemoryTaskListRepository
+import de.hipp.app.taskcards.testutil.TestRepositories
+import de.hipp.app.taskcards.testutil.TestStringProvider
+import de.hipp.app.taskcards.ui.viewmodel.CardsViewModel
+import de.hipp.app.taskcards.ui.viewmodel.ListViewModel
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+
+/**
+ * Keyboard Navigation Tests for TaskCards Application
+ *
+ * Verifies WCAG 2.1 Level AA compliance for keyboard accessibility:
+ * - 2.1.1 Keyboard: All functionality available via keyboard
+ * - 2.1.2 No Keyboard Trap: Focus can move away from all components
+ * - 2.4.3 Focus Order: Logical and intuitive tab order
+ * - 2.4.7 Focus Visible: Focus indicators clearly visible
+ *
+ * These tests verify that all interactive functionality is accessible via
+ * keyboard equivalents (semantic actions) without requiring gestures.
+ *
+ * Note: Focus order and visual focus indicators are tested in integration/UI tests.
+ * These unit tests verify that keyboard-equivalent operations (semantic actions)
+ * produce the same results as gesture-based interactions.
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+class KeyboardNavigationTest : StringSpec({
+    val dispatcher = UnconfinedTestDispatcher()
+    val strings = TestStringProvider()
+
+    beforeTest { Dispatchers.setMain(dispatcher) }
+    afterTest { Dispatchers.resetMain() }
+
+    /**
+     * Verifies that CardsScreen provides keyboard-accessible method to complete tasks
+     * Alternative to swipe gesture for WCAG 2.1.1 compliance
+     *
+     * WCAG 2.1.1: Keyboard - all functionality available via keyboard
+     */
+    "CardsScreen: Complete task operation is keyboard accessible" {
+        runTest(dispatcher) {
+            val repo = InMemoryTaskListRepository(dispatcher)
+            val categoryRepo = InMemoryCategoryRepository(repo, dispatcher)
+            val taskItem = repo.addTask("cards", "Task to complete")
+            val vm = CardsViewModel("cards", repo, categoryRepo, strings, dispatcher)
+            val stateJob = backgroundScope.launch { vm.state.collect {} }
+            advanceUntilIdle()
+
+            // Verify initial state
+            vm.state.value.visibleCards shouldHaveSize 1
+            vm.state.value.visibleCards[0].done shouldBe false
+
+            // Perform keyboard-equivalent operation (Enter/Space on "Mark as done" action)
+            vm.swipeComplete(taskItem.id, true)
+            advanceUntilIdle()
+
+            // Verify task is marked as done and removed from visible cards
+            val tasks = repo.observeTasks("cards").first()
+            tasks.first { it.id == taskItem.id }.done shouldBe true
+            vm.state.value.visibleCards.none { it.id == taskItem.id } shouldBe true
+
+            stateJob.cancel()
+        }
+    }
+
+    /**
+     * Verifies that CardsScreen allows undoing a completed task via keyboard
+     * Alternative to gesture for WCAG 2.1.1 compliance
+     *
+     * WCAG 2.1.1: Keyboard - all functionality available via keyboard
+     */
+    "CardsScreen: Undo complete operation is keyboard accessible" {
+        runTest(dispatcher) {
+            val repo = InMemoryTaskListRepository(dispatcher)
+            val categoryRepo = InMemoryCategoryRepository(repo, dispatcher)
+            val taskItem = repo.addTask("cards", "Done task")
+            repo.markDone("cards", taskItem.id, true)
+            val vm = CardsViewModel("cards", repo, categoryRepo, strings, dispatcher)
+            val stateJob = backgroundScope.launch { vm.state.collect {} }
+            advanceUntilIdle()
+
+            // Initially done, not visible in cards
+            vm.state.value.visibleCards shouldHaveSize 0
+
+            // Perform keyboard-equivalent undo operation
+            vm.swipeComplete(taskItem.id, false)
+            advanceUntilIdle()
+
+            // Verify task is back to active state
+            val tasks = repo.observeTasks("cards").first()
+            tasks.first { it.id == taskItem.id }.done shouldBe false
+            vm.state.value.visibleCards.any { it.id == taskItem.id } shouldBe true
+
+            stateJob.cancel()
+        }
+    }
+
+    /**
+     * Verifies that ListScreen add task operation is keyboard accessible
+     * Text input + Enter key equivalent to clicking add button
+     *
+     * WCAG 2.1.1: Keyboard - all functionality available via keyboard
+     */
+    "ListScreen: Add task operation is keyboard accessible" {
+        runTest(dispatcher) {
+            val repo = InMemoryTaskListRepository(dispatcher)
+            val categoryRepo = InMemoryCategoryRepository(repo, dispatcher)
+            val prefsRepo = TestRepositories.createPreferencesRepository()
+            val vm = ListViewModel("list", repo, categoryRepo, prefsRepo, strings, dispatcher)
+            val stateJob = backgroundScope.launch { vm.state.collect {} }
+            advanceUntilIdle()
+
+            // Initial state: no tasks
+            vm.state.value.tasks shouldHaveSize 0
+
+            // Perform keyboard-equivalent add operation (type text + Enter)
+            vm.add("New task via keyboard")
+            advanceUntilIdle()
+
+            // Verify task was added
+            vm.state.value.tasks shouldHaveSize 1
+            vm.state.value.tasks[0].text shouldBe "New task via keyboard"
+
+            stateJob.cancel()
+        }
+    }
+
+    /**
+     * Verifies that ListScreen remove task operation is keyboard accessible
+     * Alternative to swipe-right gesture for WCAG 2.1.1 compliance
+     *
+     * WCAG 2.1.1: Keyboard - all functionality available via keyboard
+     */
+    "ListScreen: Remove task operation is keyboard accessible" {
+        runTest(dispatcher) {
+            val repo = InMemoryTaskListRepository(dispatcher)
+            val categoryRepo = InMemoryCategoryRepository(repo, dispatcher)
+            val prefsRepo = TestRepositories.createPreferencesRepository()
+            val taskItem = repo.addTask("list", "Task to remove")
+            val vm = ListViewModel("list", repo, categoryRepo, prefsRepo, strings, dispatcher)
+            val stateJob = backgroundScope.launch { vm.state.collect {} }
+            advanceUntilIdle()
+
+            // Verify initial state
+            vm.state.value.tasks shouldHaveSize 1
+            vm.state.value.tasks[0].removed shouldBe false
+
+            // Perform keyboard-equivalent remove operation (custom action)
+            vm.remove(taskItem.id)
+            advanceUntilIdle()
+
+            // Verify task is marked as removed
+            val tasks = repo.observeTasks("list").first()
+            tasks.first { it.id == taskItem.id }.removed shouldBe true
+
+            stateJob.cancel()
+        }
+    }
+
+    /**
+     * Verifies that ListScreen restore task operation is keyboard accessible
+     * Alternative to swipe-left gesture for WCAG 2.1.1 compliance
+     *
+     * WCAG 2.1.1: Keyboard - all functionality available via keyboard
+     */
+    "ListScreen: Restore task operation is keyboard accessible" {
+        runTest(dispatcher) {
+            val repo = InMemoryTaskListRepository(dispatcher)
+            val categoryRepo = InMemoryCategoryRepository(repo, dispatcher)
+            val prefsRepo = TestRepositories.createPreferencesRepository()
+            val taskItem = repo.addTask("list", "Removed task")
+            repo.removeTask("list", taskItem.id)
+            val vm = ListViewModel("list", repo, categoryRepo, prefsRepo, strings, dispatcher)
+            val stateJob = backgroundScope.launch { vm.state.collect {} }
+            advanceUntilIdle()
+
+            // Verify task is removed
+            val initialTasks = repo.observeTasks("list").first()
+            initialTasks.first { it.id == taskItem.id }.removed shouldBe true
+
+            // Perform keyboard-equivalent restore operation (custom action)
+            vm.restore(taskItem.id)
+            advanceUntilIdle()
+
+            // Verify task is restored
+            val tasks = repo.observeTasks("list").first()
+            tasks.first { it.id == taskItem.id }.removed shouldBe false
+
+            stateJob.cancel()
+        }
+    }
+
+    /**
+     * Verifies that ListScreen toggle done operation is keyboard accessible
+     * Alternative to tap gesture for WCAG 2.1.1 compliance
+     *
+     * WCAG 2.1.1: Keyboard - all functionality available via keyboard
+     */
+    "ListScreen: Toggle done operation is keyboard accessible" {
+        runTest(dispatcher) {
+            val repo = InMemoryTaskListRepository(dispatcher)
+            val categoryRepo = InMemoryCategoryRepository(repo, dispatcher)
+            val prefsRepo = TestRepositories.createPreferencesRepository()
+            val taskItem = repo.addTask("list", "Task to toggle")
+            val vm = ListViewModel("list", repo, categoryRepo, prefsRepo, strings, dispatcher)
+            val stateJob = backgroundScope.launch { vm.state.collect {} }
+            advanceUntilIdle()
+
+            // Initial state: not done
+            vm.state.value.tasks[0].done shouldBe false
+
+            // Perform keyboard-equivalent toggle operation (Space on checkbox)
+            vm.toggleDone(taskItem.id, true)
+            advanceUntilIdle()
+
+            // Verify task is marked as done
+            val tasks1 = repo.observeTasks("list").first()
+            tasks1.first { it.id == taskItem.id }.done shouldBe true
+
+            // Toggle back to not done
+            vm.toggleDone(taskItem.id, false)
+            advanceUntilIdle()
+
+            // Verify task is back to not done
+            val tasks2 = repo.observeTasks("list").first()
+            tasks2.first { it.id == taskItem.id }.done shouldBe false
+
+            stateJob.cancel()
+        }
+    }
+
+    /**
+     * Verifies that ListScreen reorder operation is keyboard accessible
+     * Alternative to drag-and-drop gesture for WCAG 2.1.1 compliance
+     *
+     * WCAG 2.1.1: Keyboard - all functionality available via keyboard
+     */
+    "ListScreen: Reorder task operation is keyboard accessible" {
+        runTest(dispatcher) {
+            val repo = InMemoryTaskListRepository(dispatcher)
+            val categoryRepo = InMemoryCategoryRepository(repo, dispatcher)
+            val prefsRepo = TestRepositories.createPreferencesRepository()
+            val task1 = repo.addTask("list", "First task")
+            val task2 = repo.addTask("list", "Second task")
+            val task3 = repo.addTask("list", "Third task")
+            val vm = ListViewModel("list", repo, categoryRepo, prefsRepo, strings, dispatcher)
+            val stateJob = backgroundScope.launch { vm.state.collect {} }
+            advanceUntilIdle()
+
+            // Verify initial order (reverse insertion order due to order field)
+            vm.state.value.tasks shouldHaveSize 3
+            vm.state.value.tasks[0].text shouldBe "Third task"
+            vm.state.value.tasks[1].text shouldBe "Second task"
+            vm.state.value.tasks[2].text shouldBe "First task"
+
+            // Perform keyboard-equivalent move operation (custom action: "Move up"/"Move down")
+            // Move "First task" (currently at index 2) to index 0 (top)
+            vm.move(task1.id, 0)
+            advanceUntilIdle()
+
+            // Verify new order
+            val tasks = repo.observeTasks("list").first()
+            tasks.filter { !it.removed }.sortedBy { it.order }[0].text shouldBe "First task"
+
+            stateJob.cancel()
+        }
+    }
+
+    /**
+     * Verifies that no keyboard trap prevents completing multiple tasks sequentially
+     * User can complete all tasks without navigation issues
+     *
+     * WCAG 2.1.2: No Keyboard Trap
+     */
+    "CardsScreen: No keyboard trap when completing multiple tasks" {
+        runTest(dispatcher) {
+            val repo = InMemoryTaskListRepository(dispatcher)
+            val categoryRepo = InMemoryCategoryRepository(repo, dispatcher)
+            val task1 = repo.addTask("cards", "Task 1")
+            val task2 = repo.addTask("cards", "Task 2")
+            val task3 = repo.addTask("cards", "Task 3")
+            val vm = CardsViewModel("cards", repo, categoryRepo, strings, dispatcher)
+            val stateJob = backgroundScope.launch { vm.state.collect {} }
+            advanceUntilIdle()
+
+            // Initial state: 3 visible tasks
+            vm.state.value.visibleCards shouldHaveSize 3
+
+            // Complete all tasks sequentially (keyboard Tab + Enter pattern)
+            vm.swipeComplete(task3.id, true) // Top card
+            advanceUntilIdle()
+            vm.state.value.visibleCards shouldHaveSize 2
+
+            vm.swipeComplete(task2.id, true) // Next card
+            advanceUntilIdle()
+            vm.state.value.visibleCards shouldHaveSize 1
+
+            vm.swipeComplete(task1.id, true) // Last card
+            advanceUntilIdle()
+            vm.state.value.visibleCards shouldHaveSize 0
+
+            // Verify no keyboard trap - all operations completed successfully
+            val tasks = repo.observeTasks("cards").first()
+            tasks.filter { it.done } shouldHaveSize 3
+
+            stateJob.cancel()
+        }
+    }
+
+    /**
+     * Verifies that no keyboard trap prevents navigating through all tasks in list
+     * User can Tab through all tasks and perform actions without getting stuck
+     *
+     * WCAG 2.1.2: No Keyboard Trap
+     */
+    "ListScreen: No keyboard trap when navigating task list" {
+        runTest(dispatcher) {
+            val repo = InMemoryTaskListRepository(dispatcher)
+            val categoryRepo = InMemoryCategoryRepository(repo, dispatcher)
+            val prefsRepo = TestRepositories.createPreferencesRepository()
+            repeat(10) { repo.addTask("list", "Task $it") }
+            val vm = ListViewModel("list", repo, categoryRepo, prefsRepo, strings, dispatcher)
+            val stateJob = backgroundScope.launch { vm.state.collect {} }
+            advanceUntilIdle()
+
+            // Verify all tasks are accessible
+            vm.state.value.tasks shouldHaveSize 10
+
+            // Simulate keyboard navigation through all tasks
+            val tasks = vm.state.value.tasks
+            tasks.forEach { task ->
+                // Each task can be accessed and operated on
+                task.id shouldNotBe null
+                task.text shouldNotBe null
+
+                // Verify operations are available (no trap)
+                vm.toggleDone(task.id, true)
+                advanceUntilIdle()
+                vm.toggleDone(task.id, false)
+                advanceUntilIdle()
+            }
+
+            // Verify no keyboard trap - all operations completed successfully
+            stateJob.cancel()
+        }
+    }
+
+    /**
+     * Verifies that focus order is logical when adding tasks
+     * After adding a task via keyboard (Enter), focus should move appropriately
+     *
+     * WCAG 2.4.3: Focus Order - ensures meaningful sequence
+     */
+    "ListScreen: Focus order is logical when adding tasks" {
+        runTest(dispatcher) {
+            val repo = InMemoryTaskListRepository(dispatcher)
+            val categoryRepo = InMemoryCategoryRepository(repo, dispatcher)
+            val prefsRepo = TestRepositories.createPreferencesRepository()
+            val vm = ListViewModel("list", repo, categoryRepo, prefsRepo, strings, dispatcher)
+            val stateJob = backgroundScope.launch { vm.state.collect {} }
+            advanceUntilIdle()
+
+            // Add first task
+            vm.add("First task")
+            advanceUntilIdle()
+            vm.state.value.tasks shouldHaveSize 1
+
+            // Add second task immediately after (simulating focus remaining in input field)
+            vm.add("Second task")
+            advanceUntilIdle()
+            vm.state.value.tasks shouldHaveSize 2
+
+            // Verify logical order (newest tasks appear at top due to order field)
+            val tasks = vm.state.value.tasks.sortedBy { it.order }
+            tasks[0].text shouldBe "Second task"
+            tasks[1].text shouldBe "First task"
+
+            stateJob.cancel()
+        }
+    }
+
+    /**
+     * Verifies that error states are keyboard accessible
+     * User can dismiss errors via keyboard (Escape equivalent)
+     *
+     * WCAG 2.1.1: Keyboard - all functionality available via keyboard
+     */
+    "Error handling is keyboard accessible" {
+        runTest(dispatcher) {
+            val repo = InMemoryTaskListRepository(dispatcher)
+            val categoryRepo = InMemoryCategoryRepository(repo, dispatcher)
+            val prefsRepo = TestRepositories.createPreferencesRepository()
+            val vm = ListViewModel("list", repo, categoryRepo, prefsRepo, strings, dispatcher)
+            val stateJob = backgroundScope.launch { vm.state.collect {} }
+            val errorJob = backgroundScope.launch { vm.errorState.collect {} }
+            advanceUntilIdle()
+
+            // Initial state: no error
+            vm.errorState.value shouldBe null
+
+            // Note: InMemoryTaskListRepository doesn't expose errors through the ViewModel
+            // This test verifies that clearError() is accessible via keyboard
+            // In a production scenario with error dialogs, this would test dismissing them
+
+            // Simulate error clearing (keyboard equivalent of Escape or Enter on dismiss button)
+            vm.clearError()
+            advanceUntilIdle()
+
+            // Error should remain cleared
+            vm.errorState.value shouldBe null
+
+            stateJob.cancel()
+            errorJob.cancel()
+        }
+    }
+
+    /**
+     * Verifies that empty text input is handled correctly with keyboard
+     * Pressing Enter with empty input should not create a task
+     *
+     * WCAG 2.1.1: Keyboard - proper input validation
+     */
+    "ListScreen: Empty input is properly handled with keyboard" {
+        runTest(dispatcher) {
+            val repo = InMemoryTaskListRepository(dispatcher)
+            val categoryRepo = InMemoryCategoryRepository(repo, dispatcher)
+            val prefsRepo = TestRepositories.createPreferencesRepository()
+            val vm = ListViewModel("list", repo, categoryRepo, prefsRepo, strings, dispatcher)
+            val stateJob = backgroundScope.launch { vm.state.collect {} }
+            advanceUntilIdle()
+
+            // Try to add empty task (Enter with no text)
+            vm.add("")
+            advanceUntilIdle()
+
+            // No task should be created
+            vm.state.value.tasks shouldHaveSize 0
+
+            // Try whitespace-only input
+            vm.add("   ")
+            advanceUntilIdle()
+
+            // Still no task
+            vm.state.value.tasks shouldHaveSize 0
+
+            stateJob.cancel()
+        }
+    }
+
+    /**
+     * Verifies that drag state management is keyboard accessible
+     * Alternative keyboard-based reordering works without drag state
+     *
+     * WCAG 2.1.1: Keyboard - alternatives to pointer-based interactions
+     */
+    "ListScreen: Drag-free reordering is keyboard accessible" {
+        runTest(dispatcher) {
+            val repo = InMemoryTaskListRepository(dispatcher)
+            val categoryRepo = InMemoryCategoryRepository(repo, dispatcher)
+            val prefsRepo = TestRepositories.createPreferencesRepository()
+            val task1 = repo.addTask("list", "A")
+            val task2 = repo.addTask("list", "B")
+            val vm = ListViewModel("list", repo, categoryRepo, prefsRepo, strings, dispatcher)
+            val stateJob = backgroundScope.launch { vm.state.collect {} }
+            advanceUntilIdle()
+
+            // Verify initial state
+            vm.state.value.tasks shouldHaveSize 2
+
+            // Verify no drag state is needed for keyboard reordering
+            vm.dragState.value shouldBe null
+
+            // Perform keyboard-based move (no drag state involved)
+            vm.move(task1.id, 0)
+            advanceUntilIdle()
+
+            // Verify drag state remains null (keyboard doesn't use drag)
+            vm.dragState.value shouldBe null
+
+            // Verify operation succeeded
+            val tasks = repo.observeTasks("list").first()
+            tasks.filter { !it.removed }.sortedBy { it.order }[0].text shouldBe "A"
+
+            stateJob.cancel()
+        }
+    }
+})

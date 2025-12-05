@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+   Backup rules for TaskCards app
+   Applies to devices with API level < 31 (Android 11 and below)
+   See https://developer.android.com/guide/topics/data/autobackup
+   for details.
+-->
+<full-backup-content>
+    <!-- Include DataStore preferences (settings) -->
+    <include domain="file" path="datastore/"/>
+</full-backup-content>

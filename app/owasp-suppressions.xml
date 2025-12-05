@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+    OWASP Dependency Check Suppressions
+
+    This file contains suppressions for known false positives or accepted risks.
+    Each suppression should include:
+    - <notes>: Explanation of why this CVE is suppressed
+    - <cve>: The specific CVE identifier
+    - Optional: <gav> or <packageUrl> to limit scope
+
+    Example:
+    <suppress>
+       <notes>This CVE doesn't apply to our usage because...</notes>
+       <gav regex="true">^org\.example:.*:.*$</gav>
+       <cve>CVE-2023-12345</cve>
+    </suppress>
+    -->
+
+    <!-- Add specific CVE suppressions below as needed -->
+
+</suppressions>

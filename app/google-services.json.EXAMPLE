@@ -1,0 +1,18 @@
+{
+  "_comment": "This is a placeholder file. To enable Firebase services:",
+  "_instructions": [
+    "1. Go to the Firebase Console: https://console.firebase.google.com/",
+    "2. Create a new project or select an existing one",
+    "3. Add an Android app to your Firebase project",
+    "4. Register your app with package name: de.hipp.android.taskcards",
+    "5. Download the google-services.json file",
+    "6. Place it in the app/ directory (same directory as this file)",
+    "7. Delete this EXAMPLE file",
+    "8. Run './gradlew assembleDebug' to build with Firebase enabled"
+  ],
+  "_note": "Without a valid google-services.json file, Firebase services (Analytics, Crashlytics) will not work.",
+  "_required_for": [
+    "Firebase Crashlytics - Crash reporting",
+    "Firebase Analytics - User analytics"
+  ]
+}

@@ -1,0 +1,81 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+  <!-- Deckbox base -->
+  <group android:translateX="256" android:translateY="300">
+    <!-- Box shadow -->
+    <path
+        android:fillColor="#8B7355"
+        android:pathData="M-77,0 h154 a8,8 0 0 1 8,8 v92 a0,0 0 0 1 0,0 H-85 a0,0 0 0 1 0,0 V8 a8,8 0 0 1 8,-8 Z" />
+    
+    <!-- Box front face -->
+    <path
+        android:fillColor="#A0826D"
+        android:pathData="M-77,-10 h154 a8,8 0 0 1 8,8 v92 a0,0 0 0 1 0,0 H-85 a0,0 0 0 1 0,0 V-2 a8,8 0 0 1 8,-8 Z" />
+    
+    <!-- Box top edge -->
+    <path
+        android:fillColor="#8B7355"
+        android:pathData="M-85,-10 A85,20 0 1,0 85,-10 A85,20 0 1,0 -85,-10 Z" />
+    <path
+        android:fillColor="#B8956F"
+        android:pathData="M-85,-10 A85,18 0 1,0 85,-10 A85,18 0 1,0 -85,-10 Z" />
+    
+    <!-- Box detail line -->
+    <path
+        android:fillColor="#8B7355"
+        android:pathData="M-80,20 h160 v2 H-80 Z" />
+  </group>
+  
+  <!-- Cards being drawn out -->
+  <!-- Card 3 (back) -->
+  <group android:translateX="256" android:translateY="200" android:rotation="-8">
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#333"
+        android:strokeWidth="3"
+        android:pathData="M-42,-70 h84 a8,8 0 0 1 8,8 v124 a8,8 0 0 1 -8,8 h-84 a8,8 0 0 1 -8,-8 v-124 a8,8 0 0 1 8,-8 Z" />
+    <path
+        android:fillColor="#4A90E2"
+        android:pathData="M-36,-60 h72 a4,4 0 0 1 4,4 v112 a4,4 0 0 1 -4,4 h-72 a4,4 0 0 1 -4,-4 v-112 a4,4 0 0 1 4,-4 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.3"
+        android:pathData="M-25,0 A25,25 0 1,1 25,0 A25,25 0 1,1 -25,0 Z" />
+  </group>
+  
+  <!-- Card 2 (middle) -->
+  <group android:translateX="256" android:translateY="190" android:rotation="0">
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#333"
+        android:strokeWidth="3"
+        android:pathData="M-42,-70 h84 a8,8 0 0 1 8,8 v124 a8,8 0 0 1 -8,8 h-84 a8,8 0 0 1 -8,-8 v-124 a8,8 0 0 1 8,-8 Z" />
+    <path
+        android:fillColor="#E74C3C"
+        android:pathData="M-36,-60 h72 a4,4 0 0 1 4,4 v112 a4,4 0 0 1 -4,4 h-72 a4,4 0 0 1 -4,-4 v-112 a4,4 0 0 1 4,-4 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.3"
+        android:pathData="M-25,0 A25,25 0 1,1 25,0 A25,25 0 1,1 -25,0 Z" />
+  </group>
+  
+  <!-- Card 1 (front) -->
+  <group android:translateX="256" android:translateY="180" android:rotation="8">
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#333"
+        android:strokeWidth="3"
+        android:pathData="M-42,-70 h84 a8,8 0 0 1 8,8 v124 a8,8 0 0 1 -8,8 h-84 a8,8 0 0 1 -8,-8 v-124 a8,8 0 0 1 8,-8 Z" />
+    <path
+        android:fillColor="#27AE60"
+        android:pathData="M-36,-60 h72 a4,4 0 0 1 4,4 v112 a4,4 0 0 1 -4,4 h-72 a4,4 0 0 1 -4,-4 v-112 a4,4 0 0 1 4,-4 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.3"
+        android:pathData="M-25,0 A25,25 0 1,1 25,0 A25,25 0 1,1 -25,0 Z" />
+  </group>
+</vector>

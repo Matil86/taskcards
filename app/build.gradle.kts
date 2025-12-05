@@ -87,8 +87,13 @@ android {
     testOptions {
         unitTests.all {
             it.useJUnitPlatform()
+            // Kotest timeouts
             it.systemProperty("kotest.framework.timeout", "300000") // 5 minute timeout per test
             it.systemProperty("kotest.framework.invocation.timeout", "60000") // 1 minute timeout per test case
+            // Kotest parallel execution - run test classes in parallel
+            it.systemProperty("kotest.framework.parallelism", "3") // Run up to 3 test classes concurrently
+            // Gradle parallel test execution
+            it.maxParallelForks = Runtime.getRuntime().availableProcessors() // Use all available CPU cores
         }
     }
 }

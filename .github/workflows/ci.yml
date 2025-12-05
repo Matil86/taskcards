@@ -3,8 +3,18 @@ name: CI Quality Gates
 on:
   push:
     branches: [ main, develop ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'LICENSE'
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'LICENSE'
 
 jobs:
   build-and-test:
@@ -15,31 +25,38 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
           cache: 'gradle'
+
+      - name: Cache Gradle build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.gradle/build-cache
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      - name: Start Timer
+        id: timer
+        run: echo "start_time=$(date +%s)" >> $GITHUB_OUTPUT
 
       - name: Create google-services.json
         run: |
           echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/google-services.json
 
-      # QUALITY GATE 1: Compilation
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
-
-      # QUALITY GATE 2: Unit Tests
-      - name: Run Unit Tests
-        run: ./gradlew test
-
-      # QUALITY GATE 3: Lint
-      - name: Run Lint Checks
-        run: ./gradlew lint
+      # QUALITY GATES: Run in parallel for faster execution
+      - name: Run Quality Gates (Build, Test, Lint)
+        run: ./gradlew assembleDebug test lint --parallel --scan
 
       # QUALITY GATE 4: Test Coverage Report
       - name: Generate Test Report
@@ -68,18 +85,87 @@ jobs:
 
       # Upload lint results
       - name: Upload Lint Results
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: lint-results
           path: app/build/reports/lint-results-*.html
 
-      # Summary
+      # Summary with timing
       - name: Build Summary
         if: always()
         run: |
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - ${{ steps.timer.outputs.start_time }}))
+          MINUTES=$((DURATION / 60))
+          SECONDS=$((DURATION % 60))
+
           echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⏱️ **Total Duration**: ${MINUTES}m ${SECONDS}s" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ Compilation: Success" >> $GITHUB_STEP_SUMMARY
           echo "✅ Unit Tests: Passed" >> $GITHUB_STEP_SUMMARY
           echo "✅ Lint: Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🚀 **Optimizations Active**: Parallel execution, build caching, Gradle optimization flags" >> $GITHUB_STEP_SUMMARY
+
+  instrumented-tests:
+    name: Instrumented Tests
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Cache Gradle build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.gradle/build-cache
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Create google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/google-services.json
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: AVD cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-34
+
+      - name: Run Instrumented Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: default
+          arch: x86_64
+          profile: Nexus 6
+          script: ./gradlew connectedAndroidTest --scan
+
+      - name: Upload Instrumented Test Results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumented-test-results
+          path: app/build/reports/androidTests/

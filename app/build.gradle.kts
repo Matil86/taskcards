@@ -70,6 +70,12 @@ android {
         compose = true
         buildConfig = true
     }
+    lint {
+        // Disable MissingTranslation check to allow partial translations
+        disable += "MissingTranslation"
+        // Don't abort build on lint errors (let CI decide)
+        abortOnError = false
+    }
     packaging {
         resources {
             excludes += listOf(

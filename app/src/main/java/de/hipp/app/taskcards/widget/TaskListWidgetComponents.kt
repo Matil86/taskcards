@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
+import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
@@ -51,7 +52,7 @@ fun TaskListWidgetContent(config: WidgetPreferences, task: TaskItem?) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(ColorProvider(androidx.glance.R.color.glance_colorSurface))
+            .background(GlanceTheme.colors.surface)
             .padding(16.dp)
     ) {
         // Header
@@ -154,7 +155,7 @@ fun ReminderButton(
 ) {
     Box(
         modifier = GlanceModifier
-            .background(ColorProvider(androidx.glance.R.color.glance_colorPrimaryContainer))
+            .background(GlanceTheme.colors.primaryContainer)
             .cornerRadius(8.dp)
             .padding(horizontal = 12.dp, vertical = 8.dp)
             .clickable(
@@ -173,7 +174,7 @@ fun ReminderButton(
             style = TextStyle(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = ColorProvider(androidx.glance.R.color.glance_colorOnPrimaryContainer)
+                color = GlanceTheme.colors.onPrimaryContainer
             )
         )
     }
@@ -187,7 +188,7 @@ fun TaskWidgetItem(task: TaskItem, listId: String) {
     Row(
         modifier = GlanceModifier
             .fillMaxWidth()
-            .background(ColorProvider(androidx.glance.R.color.glance_colorSurfaceVariant))
+            .background(GlanceTheme.colors.surfaceVariant)
             .cornerRadius(8.dp)
             .padding(12.dp)
             .clickable(
@@ -248,7 +249,7 @@ fun WidgetConfigRequired() {
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(ColorProvider(androidx.glance.R.color.glance_colorSurface))
+            .background(GlanceTheme.colors.surface)
             .padding(16.dp)
             .clickable(actionRunCallback<OpenConfigAction>()),
         contentAlignment = Alignment.Center

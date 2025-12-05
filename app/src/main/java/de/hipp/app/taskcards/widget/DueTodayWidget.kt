@@ -102,7 +102,7 @@ fun DueTodayWidgetContent(
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(ColorProvider(androidx.glance.R.color.glance_colorSurface))
+            .background(GlanceTheme.colors.surface)
             .padding(16.dp)
     ) {
         // Header with overdue badge

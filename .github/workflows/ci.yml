@@ -66,7 +66,7 @@ jobs:
 
       # QUALITY GATES: Run in parallel for faster execution
       - name: Run Quality Gates (Build, Test, Lint)
-        run: ./gradlew assembleDebug test lint --parallel --scan
+        run: ./gradlew assembleDebug test lint --parallel
 
       # QUALITY GATE 4: Test Coverage Report
       - name: Generate Test Report
@@ -171,7 +171,7 @@ jobs:
           target: default
           arch: x86_64
           profile: Nexus 6
-          script: ./gradlew connectedAndroidTest --scan
+          script: ./gradlew connectedAndroidTest
 
       - name: Upload Instrumented Test Results
         if: failure()

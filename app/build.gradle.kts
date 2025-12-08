@@ -236,23 +236,24 @@ tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
     jvmTarget = "21"
 }
 
-// Kover Code Coverage Configuration
+// Kover Code Coverage Configuration (v0.8.3 API)
 kover {
     reports {
         // Configure verification rules (enforced in CI)
         verify {
+            // Line coverage: 90% minimum
             rule("Minimum Line Coverage") {
                 bound {
                     minValue = 90
-                    metric = kotlinx.kover.gradle.plugin.dsl.MetricType.LINE
-                    aggregation = kotlinx.kover.gradle.plugin.dsl.AggregationType.COVERED_PERCENTAGE
+                    coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.LINE
                 }
             }
+
+            // Branch coverage: 85% minimum
             rule("Minimum Branch Coverage") {
                 bound {
                     minValue = 85
-                    metric = kotlinx.kover.gradle.plugin.dsl.MetricType.BRANCH
-                    aggregation = kotlinx.kover.gradle.plugin.dsl.AggregationType.COVERED_PERCENTAGE
+                    coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.BRANCH
                 }
             }
         }
@@ -268,9 +269,12 @@ kover {
         }
     }
 
-    // Exclude generated code and Android framework classes
-    excludeAndroidGenerated = true
-    excludeJavaCode = false
+    // Exclude generated code (updated for Kover 0.8.3)
+    currentProject {
+        sources {
+            excludedSourceSets.add("release")  // Exclude Android generated sources
+        }
+    }
 }
 
 // Make check task depend on security and quality checks

@@ -3,6 +3,14 @@ package de.hipp.app.taskcards.model
 import java.util.Calendar
 import java.util.UUID
 
+// Calendar constants for end of day/period calculations
+private const val END_OF_DAY_HOUR = 23
+private const val END_OF_DAY_MINUTE = 59
+private const val END_OF_DAY_SECOND = 59
+private const val END_OF_DAY_MILLISECOND = 999
+private const val DAYS_IN_WEEK = 7
+private const val DAYS_IN_MONTH = 30
+
 /**
  * Represents a search and filter configuration for tasks.
  * All filter criteria are combined with AND logic.
@@ -72,10 +80,10 @@ data class DueDateRange(
             calendar.set(Calendar.MILLISECOND, 0)
             val startOfDay = calendar.timeInMillis
 
-            calendar.set(Calendar.HOUR_OF_DAY, 23)
-            calendar.set(Calendar.MINUTE, 59)
-            calendar.set(Calendar.SECOND, 59)
-            calendar.set(Calendar.MILLISECOND, 999)
+            calendar.set(Calendar.HOUR_OF_DAY, END_OF_DAY_HOUR)
+            calendar.set(Calendar.MINUTE, END_OF_DAY_MINUTE)
+            calendar.set(Calendar.SECOND, END_OF_DAY_SECOND)
+            calendar.set(Calendar.MILLISECOND, END_OF_DAY_MILLISECOND)
             val endOfDay = calendar.timeInMillis
 
             return DueDateRange(
@@ -96,11 +104,11 @@ data class DueDateRange(
             calendar.set(Calendar.MILLISECOND, 0)
             val startOfToday = calendar.timeInMillis
 
-            calendar.add(Calendar.DAY_OF_YEAR, 7)
-            calendar.set(Calendar.HOUR_OF_DAY, 23)
-            calendar.set(Calendar.MINUTE, 59)
-            calendar.set(Calendar.SECOND, 59)
-            calendar.set(Calendar.MILLISECOND, 999)
+            calendar.add(Calendar.DAY_OF_YEAR, DAYS_IN_WEEK)
+            calendar.set(Calendar.HOUR_OF_DAY, END_OF_DAY_HOUR)
+            calendar.set(Calendar.MINUTE, END_OF_DAY_MINUTE)
+            calendar.set(Calendar.SECOND, END_OF_DAY_SECOND)
+            calendar.set(Calendar.MILLISECOND, END_OF_DAY_MILLISECOND)
             val endOfWeek = calendar.timeInMillis
 
             return DueDateRange(
@@ -120,10 +128,10 @@ data class DueDateRange(
             calendar.set(Calendar.SECOND, 0)
             calendar.set(Calendar.MILLISECOND, 0)
             calendar.add(Calendar.DAY_OF_YEAR, -1)
-            calendar.set(Calendar.HOUR_OF_DAY, 23)
-            calendar.set(Calendar.MINUTE, 59)
-            calendar.set(Calendar.SECOND, 59)
-            calendar.set(Calendar.MILLISECOND, 999)
+            calendar.set(Calendar.HOUR_OF_DAY, END_OF_DAY_HOUR)
+            calendar.set(Calendar.MINUTE, END_OF_DAY_MINUTE)
+            calendar.set(Calendar.SECOND, END_OF_DAY_SECOND)
+            calendar.set(Calendar.MILLISECOND, END_OF_DAY_MILLISECOND)
             val endOfYesterday = calendar.timeInMillis
 
             return DueDateRange(
@@ -144,11 +152,11 @@ data class DueDateRange(
             calendar.set(Calendar.MILLISECOND, 0)
             val startOfToday = calendar.timeInMillis
 
-            calendar.add(Calendar.DAY_OF_YEAR, 30)
-            calendar.set(Calendar.HOUR_OF_DAY, 23)
-            calendar.set(Calendar.MINUTE, 59)
-            calendar.set(Calendar.SECOND, 59)
-            calendar.set(Calendar.MILLISECOND, 999)
+            calendar.add(Calendar.DAY_OF_YEAR, DAYS_IN_MONTH)
+            calendar.set(Calendar.HOUR_OF_DAY, END_OF_DAY_HOUR)
+            calendar.set(Calendar.MINUTE, END_OF_DAY_MINUTE)
+            calendar.set(Calendar.SECOND, END_OF_DAY_SECOND)
+            calendar.set(Calendar.MILLISECOND, END_OF_DAY_MILLISECOND)
             val endOfMonth = calendar.timeInMillis
 
             return DueDateRange(

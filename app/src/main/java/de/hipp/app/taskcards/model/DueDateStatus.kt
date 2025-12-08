@@ -2,6 +2,20 @@ package de.hipp.app.taskcards.model
 
 import java.util.Calendar
 
+// Calendar constants for due date calculations
+private const val END_OF_DAY_HOUR = 23
+private const val END_OF_DAY_MINUTE = 59
+private const val END_OF_DAY_SECOND = 59
+private const val END_OF_DAY_MILLISECOND = 999
+private const val DAYS_IN_WEEK = 7
+
+// Sort priority constants
+private const val PRIORITY_OVERDUE = 0
+private const val PRIORITY_TODAY = 1
+private const val PRIORITY_THIS_WEEK = 2
+private const val PRIORITY_LATER = 3
+private const val PRIORITY_NO_DUE_DATE = 4
+
 /**
  * Determines a task's due date status relative to the current time.
  * Used for visual indicators and sorting.
@@ -32,7 +46,6 @@ fun calculateDueDateStatus(dueDate: Long?): DueDateStatus {
     if (dueDate == null) return DueDateStatus.NO_DUE_DATE
 
     val calendar = Calendar.getInstance()
-    val now = calendar.timeInMillis
 
     // Get start of today (00:00:00)
     calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -42,19 +55,19 @@ fun calculateDueDateStatus(dueDate: Long?): DueDateStatus {
     val startOfToday = calendar.timeInMillis
 
     // Get end of today (23:59:59)
-    calendar.set(Calendar.HOUR_OF_DAY, 23)
-    calendar.set(Calendar.MINUTE, 59)
-    calendar.set(Calendar.SECOND, 59)
-    calendar.set(Calendar.MILLISECOND, 999)
+    calendar.set(Calendar.HOUR_OF_DAY, END_OF_DAY_HOUR)
+    calendar.set(Calendar.MINUTE, END_OF_DAY_MINUTE)
+    calendar.set(Calendar.SECOND, END_OF_DAY_SECOND)
+    calendar.set(Calendar.MILLISECOND, END_OF_DAY_MILLISECOND)
     val endOfToday = calendar.timeInMillis
 
     // Get end of this week (7 days from now)
     calendar.timeInMillis = startOfToday
-    calendar.add(Calendar.DAY_OF_YEAR, 7)
-    calendar.set(Calendar.HOUR_OF_DAY, 23)
-    calendar.set(Calendar.MINUTE, 59)
-    calendar.set(Calendar.SECOND, 59)
-    calendar.set(Calendar.MILLISECOND, 999)
+    calendar.add(Calendar.DAY_OF_YEAR, DAYS_IN_WEEK)
+    calendar.set(Calendar.HOUR_OF_DAY, END_OF_DAY_HOUR)
+    calendar.set(Calendar.MINUTE, END_OF_DAY_MINUTE)
+    calendar.set(Calendar.SECOND, END_OF_DAY_SECOND)
+    calendar.set(Calendar.MILLISECOND, END_OF_DAY_MILLISECOND)
     val endOfWeek = calendar.timeInMillis
 
     return when {
@@ -70,9 +83,9 @@ fun calculateDueDateStatus(dueDate: Long?): DueDateStatus {
  * Lower values mean higher priority (appear first in sorted lists).
  */
 fun DueDateStatus.sortPriority(): Int = when (this) {
-    DueDateStatus.OVERDUE -> 0
-    DueDateStatus.TODAY -> 1
-    DueDateStatus.THIS_WEEK -> 2
-    DueDateStatus.LATER -> 3
-    DueDateStatus.NO_DUE_DATE -> 4
+    DueDateStatus.OVERDUE -> PRIORITY_OVERDUE
+    DueDateStatus.TODAY -> PRIORITY_TODAY
+    DueDateStatus.THIS_WEEK -> PRIORITY_THIS_WEEK
+    DueDateStatus.LATER -> PRIORITY_LATER
+    DueDateStatus.NO_DUE_DATE -> PRIORITY_NO_DUE_DATE
 }

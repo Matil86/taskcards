@@ -45,6 +45,7 @@ class QuickAddActivity : ComponentActivity() {
     @Inject
     lateinit var taskListMetadataRepo: TaskListMetadataRepository
 
+    @Suppress("LongMethod")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

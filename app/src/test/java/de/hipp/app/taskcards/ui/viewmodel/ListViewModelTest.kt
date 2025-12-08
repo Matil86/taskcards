@@ -29,6 +29,11 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import java.util.Calendar
 
+/**
+ * Test-specific exception for simulating repository errors
+ */
+private class TestRepositoryException(message: String) : Exception(message)
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class ListViewModelTest : StringSpec({
     val testDispatcher = StandardTestDispatcher()
@@ -788,12 +793,24 @@ private class MockPreferencesRepository : PreferencesRepository {
     override val settings: Flow<Settings> = _settings
     override val savedSearches: Flow<List<SavedSearch>> = _savedSearches
 
-    override suspend fun setHighContrastMode(enabled: Boolean) {}
-    override suspend fun setRemindersEnabled(enabled: Boolean) {}
-    override suspend fun setReminderTime(hour: Int, minute: Int) {}
-    override suspend fun setNotificationSound(enabled: Boolean) {}
-    override suspend fun setNotificationVibration(enabled: Boolean) {}
-    override suspend fun setLanguage(languageCode: String) {}
+    override suspend fun setHighContrastMode(enabled: Boolean) {
+        // No-op for testing
+    }
+    override suspend fun setRemindersEnabled(enabled: Boolean) {
+        // No-op for testing
+    }
+    override suspend fun setReminderTime(hour: Int, minute: Int) {
+        // No-op for testing
+    }
+    override suspend fun setNotificationSound(enabled: Boolean) {
+        // No-op for testing
+    }
+    override suspend fun setNotificationVibration(enabled: Boolean) {
+        // No-op for testing
+    }
+    override suspend fun setLanguage(languageCode: String) {
+        // No-op for testing
+    }
 
     override fun getSavedSearchesForList(listId: String): Flow<List<SavedSearch>> {
         return flowOf(_savedSearches.value.filter { it.listId == listId })
@@ -813,7 +830,9 @@ private class MockPreferencesRepository : PreferencesRepository {
         _savedSearches.value = _savedSearches.value.filter { it.id != searchId }
     }
 
-    override suspend fun setLastUsedListId(listId: String) {}
+    override suspend fun setLastUsedListId(listId: String) {
+        // No-op for testing
+    }
     override suspend fun getLastUsedListId(): String? = null
 }
 
@@ -833,27 +852,27 @@ private class FailingTaskListRepository : TaskListRepository {
     }
 
     override suspend fun addTask(listId: String, text: String): de.hipp.app.taskcards.model.TaskItem {
-        throw RuntimeException("Test exception")
+        throw TestRepositoryException("Test exception")
     }
 
     override suspend fun removeTask(listId: String, taskId: String) {
-        throw RuntimeException("Test exception")
+        throw TestRepositoryException("Test exception")
     }
 
     override suspend fun restoreTask(listId: String, taskId: String) {
-        throw RuntimeException("Test exception")
+        throw TestRepositoryException("Test exception")
     }
 
     override suspend fun markDone(listId: String, taskId: String, done: Boolean) {
-        throw RuntimeException("Test exception")
+        throw TestRepositoryException("Test exception")
     }
 
     override suspend fun moveTask(listId: String, taskId: String, toIndex: Int) {
-        throw RuntimeException("Test exception")
+        throw TestRepositoryException("Test exception")
     }
 
     override suspend fun clearList(listId: String) {
-        throw RuntimeException("Test exception")
+        throw TestRepositoryException("Test exception")
     }
 
     override suspend fun updateTaskDueDate(
@@ -862,7 +881,7 @@ private class FailingTaskListRepository : TaskListRepository {
         dueDate: Long?,
         reminderType: de.hipp.app.taskcards.model.ReminderType
     ) {
-        throw RuntimeException("Test exception")
+        throw TestRepositoryException("Test exception")
     }
 
     override suspend fun getActiveListCount(): Int = 0

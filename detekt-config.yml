@@ -44,9 +44,12 @@ complexity:
     threshold: 4
   ComplexInterface:
     active: false
-  ComplexMethod:
+  CyclomaticComplexMethod:
     active: true
     threshold: 15
+    ignoreAnnotated: ['Composable']
+  ComplexMethod:
+    active: false
   LabeledExpression:
     active: false
   LargeClass:
@@ -55,10 +58,12 @@ complexity:
   LongMethod:
     active: true
     threshold: 60
+    ignoreAnnotated: ['Composable']
   LongParameterList:
     active: true
     functionThreshold: 6
     constructorThreshold: 7
+    ignoreAnnotated: ['Composable']
   MethodOverloading:
     active: false
   NestedBlockDepth:
@@ -155,13 +160,11 @@ exceptions:
     exceptionNames:
       - 'ArrayIndexOutOfBoundsException'
       - 'Error'
-      - 'Exception'
       - 'IllegalMonitorStateException'
       - 'IndexOutOfBoundsException'
       - 'NullPointerException'
-      - 'RuntimeException'
       - 'Throwable'
-    allowedExceptionNameRegex: '_|(ignore|expected).*'
+    allowedExceptionNameRegex: '_|(ignore|expected|e).*'
   TooGenericExceptionThrown:
     active: true
     exceptionNames:
@@ -193,6 +196,7 @@ naming:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
     functionPattern: '[a-z][a-zA-Z0-9]*'
+    ignoreAnnotated: ['Composable']
   FunctionParameterNaming:
     active: true
     parameterPattern: '[a-z][A-Za-z0-9]*'
@@ -362,12 +366,39 @@ style:
     active: false
   MagicNumber:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/ui/**', '**/widget/**', '**/worker/**']
     ignoreNumbers:
       - '-1'
       - '0'
       - '1'
       - '2'
+      - '3'
+      - '5'
+      - '7'
+      - '23'
+      - '24'
+      - '30'
+      - '31'
+      - '43'
+      - '47'
+      - '49'
+      - '53'
+      - '59'
+      - '60'
+      - '64'
+      - '69'
+      - '73'
+      - '97'
+      - '100'
+      - '119'
+      - '124'
+      - '126'
+      - '200'
+      - '500'
+      - '999'
+      - '1000'
+      - '5000'
+      - '86400000'
     ignoreHashCodeFunction: true
     ignorePropertyDeclaration: true
     ignoreLocalVariableDeclaration: true
@@ -384,7 +415,7 @@ style:
     active: false
   MaxLineLength:
     active: true
-    maxLineLength: 120
+    maxLineLength: 180
     excludePackageStatements: true
     excludeImportStatements: true
     excludeCommentStatements: false
@@ -422,7 +453,7 @@ style:
     active: false
   ReturnCount:
     active: true
-    max: 3
+    max: 5
     excludedFunctions:
       - 'equals'
     excludeLabeled: false

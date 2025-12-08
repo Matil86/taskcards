@@ -98,5 +98,5 @@ fun TimePickerDialog(
  * Formats time in 24-hour format.
  */
 fun formatTime24Hour(hour: Int, minute: Int): String {
-    return String.format("%02d:%02d", hour, minute)
+    return String.format(java.util.Locale.ROOT, "%02d:%02d", hour, minute)
 }

@@ -2,7 +2,11 @@ package de.hipp.app.taskcards.worker
 
 import android.content.Context
 import android.util.Log
-import androidx.work.*
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -42,8 +46,17 @@ object DailyReminderScheduler {
         val initialDelay = targetTime.timeInMillis - currentTime.timeInMillis
 
         Log.d(TAG, "Initial delay: ${initialDelay / 1000 / 60} minutes (${initialDelay}ms)")
-        Log.d(TAG, "Target time: ${targetTime.get(Calendar.YEAR)}-${targetTime.get(Calendar.MONTH) + 1}-${targetTime.get(Calendar.DAY_OF_MONTH)} ${String.format("%02d:%02d", hour, minute)}")
-        Log.d(TAG, "Current time: ${currentTime.get(Calendar.YEAR)}-${currentTime.get(Calendar.MONTH) + 1}-${currentTime.get(Calendar.DAY_OF_MONTH)} ${String.format("%02d:%02d", currentTime.get(Calendar.HOUR_OF_DAY), currentTime.get(Calendar.MINUTE))}")
+        val targetTimeStr = String.format(java.util.Locale.ROOT, "%02d:%02d", hour, minute)
+        val targetDateStr = "${targetTime.get(Calendar.YEAR)}-${targetTime.get(Calendar.MONTH) + 1}-${targetTime.get(Calendar.DAY_OF_MONTH)}"
+        Log.d(TAG, "Target time: $targetDateStr $targetTimeStr")
+        val currentTimeStr = String.format(
+            java.util.Locale.ROOT,
+            "%02d:%02d",
+            currentTime.get(Calendar.HOUR_OF_DAY),
+            currentTime.get(Calendar.MINUTE)
+        )
+        val currentDateStr = "${currentTime.get(Calendar.YEAR)}-${currentTime.get(Calendar.MONTH) + 1}-${currentTime.get(Calendar.DAY_OF_MONTH)}"
+        Log.d(TAG, "Current time: $currentDateStr $currentTimeStr")
 
         // Create the work request with daily repeat
         // NOTE: NO flex interval - executes as close to exact time as possible

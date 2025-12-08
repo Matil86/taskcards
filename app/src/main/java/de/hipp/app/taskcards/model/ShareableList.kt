@@ -38,21 +38,27 @@ data class ShareableList(
          * Returns null if the URI is invalid or data cannot be decoded.
          */
         fun fromDeepLink(uri: Uri): ShareableList? {
-            if (uri.scheme != "taskcards" || uri.host != "list") {
-                Log.w(TAG, "Invalid deep link scheme or host: ${uri.scheme}://${uri.host}")
-                return null
+            // Validate scheme and host
+            when {
+                uri.scheme != "taskcards" || uri.host != "list" -> {
+                    Log.w(TAG, "Invalid deep link scheme or host: ${uri.scheme}://${uri.host}")
+                    return null
+                }
             }
 
+            // Extract and validate parameters
             val name = uri.getQueryParameter("name")
-            if (name.isNullOrBlank()) {
-                Log.w(TAG, "Deep link missing required 'name' parameter")
-                return null
-            }
-
             val base64 = uri.getQueryParameter("data")
-            if (base64.isNullOrBlank()) {
-                Log.w(TAG, "Deep link missing required 'data' parameter")
-                return null
+
+            when {
+                name.isNullOrBlank() -> {
+                    Log.w(TAG, "Deep link missing required 'name' parameter")
+                    return null
+                }
+                base64.isNullOrBlank() -> {
+                    Log.w(TAG, "Deep link missing required 'data' parameter")
+                    return null
+                }
             }
 
             return try {

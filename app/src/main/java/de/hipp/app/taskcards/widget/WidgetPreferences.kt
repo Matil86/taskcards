@@ -55,8 +55,8 @@ class WidgetPreferencesRepository(context: Context) {
         val type = try {
             WidgetType.valueOf(typeName)
         } catch (e: IllegalArgumentException) {
-            return null
-        }
+            null
+        } ?: return null
 
         return WidgetPreferences(widgetId, listId, type)
     }

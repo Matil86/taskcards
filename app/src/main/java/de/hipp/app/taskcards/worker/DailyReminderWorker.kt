@@ -9,8 +9,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import de.hipp.app.taskcards.R
-import de.hipp.app.taskcards.data.TaskListRepository
-import de.hipp.app.taskcards.data.preferences.PreferencesRepository
 import de.hipp.app.taskcards.data.preferences.PreferencesRepositoryImpl
 import de.hipp.app.taskcards.di.RepositoryProvider
 import de.hipp.app.taskcards.ui.MainActivity
@@ -37,7 +35,14 @@ class DailyReminderWorker(
     override suspend fun doWork(): Result {
         return try {
             val currentTime = java.util.Calendar.getInstance()
-            Log.d(TAG, "Running daily reminder check at ${String.format("%02d:%02d:%02d", currentTime.get(java.util.Calendar.HOUR_OF_DAY), currentTime.get(java.util.Calendar.MINUTE), currentTime.get(java.util.Calendar.SECOND))}")
+            val timeStr = String.format(
+                java.util.Locale.ROOT,
+                "%02d:%02d:%02d",
+                currentTime.get(java.util.Calendar.HOUR_OF_DAY),
+                currentTime.get(java.util.Calendar.MINUTE),
+                currentTime.get(java.util.Calendar.SECOND)
+            )
+            Log.d(TAG, "Running daily reminder check at $timeStr")
             Log.d(TAG, "Worker execution timestamp: ${System.currentTimeMillis()}")
 
             // Get user preferences

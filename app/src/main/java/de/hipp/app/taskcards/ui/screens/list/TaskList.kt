@@ -80,7 +80,6 @@ fun TaskList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(reorderedTasks, key = { item -> item.id }) { item ->
-            val index = reorderedTasks.indexOf(item)
             val dismissState = rememberSwipeToDismissBoxState(
                 confirmValueChange = { value ->
                     when (value) {

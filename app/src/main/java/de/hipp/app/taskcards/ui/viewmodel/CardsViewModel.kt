@@ -46,9 +46,15 @@ class CardsViewModel @Inject constructor(
         repo = repo,
         strings = strings,
         analytics = object : de.hipp.app.taskcards.analytics.Analytics {
-            override fun logEvent(eventName: String, params: Map<String, Any>) {}
-            override fun setUserProperty(name: String, value: String) {}
-            override fun setCurrentScreen(screenName: String) {}
+            override fun logEvent(eventName: String, params: Map<String, Any>) {
+                // No-op for testing
+            }
+            override fun setUserProperty(name: String, value: String) {
+                // No-op for testing
+            }
+            override fun setCurrentScreen(screenName: String) {
+                // No-op for testing
+            }
         },
         dispatcher = dispatcher
     )
@@ -69,7 +75,9 @@ class CardsViewModel @Inject constructor(
             Logger.d(TAG) { "Total items from repo: ${items.size}" }
             Logger.d(TAG) { "Items breakdown:" }
             items.forEachIndexed { idx, item ->
-                Logger.d(TAG) { "  [$idx] id=${item.id.take(8)}, text='${item.text}', removed=${item.removed}, done=${item.done}, order=${item.order}" }
+                val itemInfo = "id=${item.id.take(8)}, text='${item.text}', " +
+                    "removed=${item.removed}, done=${item.done}, order=${item.order}"
+                Logger.d(TAG) { "  [$idx] $itemInfo" }
             }
 
             val active = items.filter { !it.removed && !it.done }.sortedBy { it.order }

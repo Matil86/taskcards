@@ -86,7 +86,7 @@ class FirebaseAuthService(private val context: Context) : AuthService {
                 else -> "Google Sign-In failed with code ${e.statusCode}: ${e.message}"
             }
             Log.e(TAG, errorMessage, e)
-            throw Exception(errorMessage, e)
+            throw de.hipp.app.taskcards.exception.AuthenticationException(errorMessage, e)
         } catch (e: Exception) {
             Log.e(TAG, "Error handling Google Sign-In result", e)
             throw e

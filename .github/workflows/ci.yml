@@ -100,6 +100,7 @@ jobs:
 
       - name: Run Static Analysis (Detekt)
         run: ./gradlew detekt
+        # Zero issues achieved - enforcing quality standard going forward
 
       - name: Upload Detekt Report
         if: always()

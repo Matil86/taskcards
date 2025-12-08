@@ -8,8 +8,8 @@ import de.hipp.app.taskcards.R
 import de.hipp.app.taskcards.analytics.Analytics
 import de.hipp.app.taskcards.analytics.AnalyticsEvents
 import de.hipp.app.taskcards.analytics.AnalyticsParams
-import de.hipp.app.taskcards.data.preferences.PreferencesRepository
 import de.hipp.app.taskcards.data.TaskListRepository
+import de.hipp.app.taskcards.data.preferences.PreferencesRepository
 import de.hipp.app.taskcards.di.StringProvider
 import de.hipp.app.taskcards.model.DueDateRange
 import de.hipp.app.taskcards.model.SavedSearch
@@ -71,9 +71,15 @@ class ListViewModel @Inject constructor(
         prefsRepo = prefsRepo,
         strings = strings,
         analytics = object : Analytics {
-            override fun logEvent(eventName: String, params: Map<String, Any>) {}
-            override fun setUserProperty(name: String, value: String) {}
-            override fun setCurrentScreen(screenName: String) {}
+            override fun logEvent(eventName: String, params: Map<String, Any>) {
+                // No-op for testing
+            }
+            override fun setUserProperty(name: String, value: String) {
+                // No-op for testing
+            }
+            override fun setCurrentScreen(screenName: String) {
+                // No-op for testing
+            }
         },
         dispatcher = dispatcher
     )

@@ -1,13 +1,14 @@
 package de.hipp.app.taskcards.auth
 
 import android.content.Context
-import android.content.Intent
 import android.util.Log
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import de.hipp.app.taskcards.R
@@ -18,24 +19,14 @@ import kotlinx.coroutines.tasks.await
 
 /**
  * Firebase implementation of AuthService.
- * Uses Google Sign-In for authentication with device Google account.
+ * Uses Google Credential Manager API for authentication with device Google account.
  */
 class FirebaseAuthService(private val context: Context) : AuthService {
     private val auth = FirebaseAuth.getInstance()
-    private val googleSignInClient: GoogleSignInClient
+    private val credentialManager = CredentialManager.create(context)
 
     companion object {
         private const val TAG = "FirebaseAuthService"
-    }
-
-    init {
-        // Configure Google Sign-In
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(context.getString(R.string.default_web_client_id))
-            .requestEmail()
-            .build()
-
-        googleSignInClient = GoogleSignIn.getClient(context, gso)
     }
 
     override suspend fun getCurrentUserId(): String? {
@@ -64,53 +55,79 @@ class FirebaseAuthService(private val context: Context) : AuthService {
         }
     }
 
-    override suspend fun getGoogleSignInIntent(): Intent {
-        return googleSignInClient.signInIntent
-    }
-
-    override suspend fun handleGoogleSignInResult(data: Intent?): String {
+    override suspend fun signInWithGoogle(activityContext: Context): String {
         return try {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            val account = task.getResult(ApiException::class.java)
+            Log.d(TAG, "Starting Google Sign-In with Credential Manager")
 
-            if (account == null) {
-                throw IllegalStateException("Google Sign-In account is null")
-            }
+            val googleIdOption = GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(false)
+                .setServerClientId(context.getString(R.string.default_web_client_id))
+                .build()
 
-            firebaseAuthWithGoogle(account)
-        } catch (e: ApiException) {
-            val errorMessage = when (e.statusCode) {
-                10 -> "Developer Error (10): SHA-1 fingerprint mismatch or incorrect OAuth client configuration. Please add your SHA-1 to Firebase Console."
-                12500 -> "Sign-in failed (12500): Please check that Google Sign-In is enabled in Firebase Authentication."
-                7 -> "Network Error (7): Please check your internet connection."
-                else -> "Google Sign-In failed with code ${e.statusCode}: ${e.message}"
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build()
+
+            val result = credentialManager.getCredential(
+                request = request,
+                context = activityContext
+            )
+
+            handleSignIn(result)
+        } catch (e: androidx.credentials.exceptions.GetCredentialException) {
+            val errorMessage = when (e) {
+                is androidx.credentials.exceptions.GetCredentialCancellationException ->
+                    "Sign-in was cancelled"
+                is androidx.credentials.exceptions.NoCredentialException ->
+                    "No Google account found on device"
+                is androidx.credentials.exceptions.GetCredentialInterruptedException ->
+                    "Sign-in was interrupted"
+                else -> "Google Sign-In failed: ${e.message}"
             }
             Log.e(TAG, errorMessage, e)
             throw de.hipp.app.taskcards.exception.AuthenticationException(errorMessage, e)
         } catch (e: Exception) {
-            Log.e(TAG, "Error handling Google Sign-In result", e)
+            Log.e(TAG, "Error during Google Sign-In", e)
             throw e
         }
     }
 
-    private suspend fun firebaseAuthWithGoogle(account: GoogleSignInAccount): String {
-        Log.d(TAG, "Authenticating with Firebase using Google account: ${account.email}")
+    private suspend fun handleSignIn(result: GetCredentialResponse): String {
+        val credential = result.credential
 
-        val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-        val result = auth.signInWithCredential(credential).await()
+        if (credential is CustomCredential &&
+            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
 
-        val userId = result.user?.uid
-            ?: throw IllegalStateException("Failed to get user ID after Google Sign-In")
+            val googleIdTokenCredential = GoogleIdTokenCredential
+                .createFrom(credential.data)
 
-        Log.d(TAG, "Successfully signed in with Google. User ID: $userId, Email: ${result.user?.email}")
-        return userId
+            Log.d(TAG, "Authenticating with Firebase using Google account: ${googleIdTokenCredential.id}")
+
+            val firebaseCredential = GoogleAuthProvider
+                .getCredential(googleIdTokenCredential.idToken, null)
+
+            val authResult = auth.signInWithCredential(firebaseCredential).await()
+
+            val userId = authResult.user?.uid
+                ?: throw IllegalStateException("Failed to get user ID after Google Sign-In")
+
+            Log.d(TAG, "Successfully signed in with Google. User ID: $userId, Email: ${authResult.user?.email}")
+            return userId
+        }
+
+        throw IllegalStateException("Unexpected credential type: ${credential.type}")
     }
 
     override suspend fun signOut() {
         try {
-            // Sign out from both Firebase and Google
+            // Sign out from Firebase
             auth.signOut()
-            googleSignInClient.signOut().await()
+
+            // Clear credential state from Credential Manager
+            credentialManager.clearCredentialState(
+                ClearCredentialStateRequest()
+            )
+
             Log.d(TAG, "Signed out successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Error signing out", e)

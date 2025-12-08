@@ -1,6 +1,6 @@
 package de.hipp.app.taskcards.auth
 
-import android.content.Intent
+import android.content.Context
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -30,17 +30,11 @@ interface AuthService {
     fun observeAuthState(): Flow<String?>
 
     /**
-     * Get the Google Sign-In intent.
-     * Launch this intent using startActivityForResult.
-     */
-    suspend fun getGoogleSignInIntent(): Intent
-
-    /**
-     * Handle the result from Google Sign-In activity.
-     * Call this from onActivityResult.
+     * Sign in with Google using Credential Manager API.
      * Returns the user ID on success.
+     * @param activityContext The activity context required for launching the credential picker UI
      */
-    suspend fun handleGoogleSignInResult(data: Intent?): String
+    suspend fun signInWithGoogle(activityContext: Context): String
 
     /**
      * Sign out the current user.

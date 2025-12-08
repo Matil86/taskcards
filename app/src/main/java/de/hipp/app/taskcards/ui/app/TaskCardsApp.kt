@@ -1,12 +1,6 @@
 package de.hipp.app.taskcards.ui.app
 
-import android.app.Activity
 import android.util.Log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -21,6 +15,11 @@ import de.hipp.app.taskcards.di.RepositoryProvider
 import de.hipp.app.taskcards.ui.theme.TaskCardsTheme
 import de.hipp.app.taskcards.worker.DailyReminderScheduler
 import de.hipp.app.taskcards.worker.NotificationChannels
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @Composable
 fun TaskCardsApp(initialDeepLinkUri: android.net.Uri? = null) {
@@ -88,31 +87,6 @@ fun TaskCardsApp(initialDeepLinkUri: android.net.Uri? = null) {
     // Set immediately to avoid race condition
     RepositoryProvider.setAuthenticated(userId != null)
 
-    // Google Sign-In launcher
-    val signInLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            CoroutineScope(Dispatchers.Main).launch {
-                try {
-                    isLoading.value = true
-                    errorMessage.value = null
-                    authService.handleGoogleSignInResult(result.data)
-                    isLoading.value = false
-                    Log.d("TaskCardsApp", "Google Sign-In successful")
-                } catch (e: Exception) {
-                    isLoading.value = false
-                    errorMessage.value = e.message ?: context.getString(R.string.auth_error)
-                    Log.e("TaskCardsApp", "Google Sign-In failed", e)
-                }
-            }
-        } else {
-            isLoading.value = false
-            errorMessage.value = context.getString(R.string.auth_error)
-            Log.e("TaskCardsApp", "Google Sign-In canceled or failed")
-        }
-    }
-
     TaskCardsTheme(useHighContrast = highContrastMode) {
         // Always show main app - authentication is optional for local-only usage
         MainApp(
@@ -123,12 +97,13 @@ fun TaskCardsApp(initialDeepLinkUri: android.net.Uri? = null) {
                     try {
                         isLoading.value = true
                         errorMessage.value = null
-                        val intent = authService.getGoogleSignInIntent()
-                        signInLauncher.launch(intent)
+                        authService.signInWithGoogle(context)
+                        isLoading.value = false
+                        Log.d("TaskCardsApp", "Google Sign-In successful")
                     } catch (e: Exception) {
                         isLoading.value = false
                         errorMessage.value = e.message ?: context.getString(R.string.auth_error)
-                        Log.e("TaskCardsApp", "Failed to get sign-in intent", e)
+                        Log.e("TaskCardsApp", "Google Sign-In failed", e)
                     }
                 }
             },

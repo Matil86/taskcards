@@ -169,8 +169,10 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
 
-    // Google Sign-In
-    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    // Google Credential Manager (replaces deprecated Google Sign-In)
+    implementation("androidx.credentials:credentials:1.2.2")
+    implementation("androidx.credentials:credentials-play-services-auth:1.2.2")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
 
     // QR Code generation for deep link sharing
     implementation("com.google.zxing:core:3.5.3")

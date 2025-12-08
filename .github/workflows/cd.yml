@@ -1,5 +1,9 @@
 name: Continuous Deployment
 
+concurrency:
+  group: taskcards-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [ main ]

@@ -1,13 +1,17 @@
-# CI/CD Workflows Documentation
+# CI/CD Workflow Documentation
 
 ## Overview
 
-The TaskCards project implements a production-grade CI/CD pipeline using GitHub Actions. The strategy employs two complementary workflows:
+The TaskCards project implements a production-grade CI/CD pipeline using GitHub Actions with a **single unified workflow** that handles both quality gates and deployment. The `cd.yml` workflow runs automatically on every push to the `main` branch and performs the following:
 
-- **CI Workflow (`ci.yml`)**: Enforces quality gates on all pull requests and pushes to main/develop branches
-- **CD Workflow (`cd.yml`)**: Automates multi-stage deployment to Google Play Store with manual approval gates
+**Unified Pipeline Architecture:**
+- **Stage 1: Quality Gates** - Comprehensive code quality checks (build, test, lint, coverage, security, static analysis)
+- **Stage 2: Instrumented Tests** - UI and integration tests on Android emulator
+- **Stage 3: Internal Deployment** - Automatic deployment to Play Store internal track
+- **Stage 4: Smoke Tests** - Automated verification of deployed release
+- **Stage 5-7: Promotion Pipeline** - Manual approval gates for alpha, beta, and production releases
 
-This architecture ensures that only thoroughly tested, high-quality code reaches production while maintaining rapid development velocity through automation and parallel execution.
+This architecture ensures that quality gates always run before deployment, maintaining high code quality while streamlining the release process into a single, cohesive pipeline.
 
 **Key Principles:**
 - Build once, deploy everywhere (single AAB promoted through all tracks)
@@ -16,125 +20,19 @@ This architecture ensures that only thoroughly tested, high-quality code reaches
 - Automated smoke testing to verify deployments
 - Fail-fast approach with detailed error reporting
 
----
-
-## CI Workflow (ci.yml)
-
-### Trigger Conditions
-
-```yaml
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-```
-
-The CI workflow runs on:
-- All pull requests targeting the `main` branch
-- Direct pushes to `main` or `develop` branches
-- Ignores documentation changes (`**.md`, `docs/**`) to optimize build time
-
-### Workflow Stages
-
-#### 1. Environment Setup
-- **JDK**: Temurin 21 (LTS)
-- **Caching**: Aggressive Gradle caching for faster builds
-  - Build cache: `~/.gradle/caches`
-  - Wrapper cache: `~/.gradle/wrapper`
-  - Custom build cache: `~/.gradle/build-cache`
-- **Firebase Config**: Decodes `GOOGLE_SERVICES_JSON_BASE64` secret
-- **Validation**: Ensures `google-services.json` is valid JSON
-
-#### 2. Quality Gates (Parallel Execution)
-
-The CI workflow runs multiple quality gates in parallel using the `--parallel` flag:
-
-```bash
-./gradlew assembleDebug test lint --parallel
-```
-
-**Quality Gate 1: Compilation**
-- Assembles debug APK
-- Validates Kotlin/Java compilation
-- Ensures all dependencies resolve correctly
-
-**Quality Gate 2: Unit Tests**
-- Runs all JUnit tests (`./gradlew test`)
-- Validates business logic, ViewModels, repositories
-- Tests run with Robolectric for Android-specific code
-
-**Quality Gate 3: Lint Analysis**
-- Android Lint checks for code quality issues
-- Validates XML resources, unused resources, API level issues
-- Enforces Android best practices
-
-**Quality Gate 4: Code Coverage (Kover)**
-- Generates XML and HTML coverage reports
-- Target thresholds:
-  - Line coverage: 90%
-  - Branch coverage: 85%
-- Status: `continue-on-error: true` (allows incremental progress)
-
-**Quality Gate 5: Security Scanning (OWASP Dependency Check)**
-- Scans all dependencies for known vulnerabilities
-- Checks against NVD (National Vulnerability Database)
-- Generates detailed HTML reports
-- Status: `continue-on-error: true` (handles NVD API rate limits gracefully)
-
-**Quality Gate 6: Static Analysis (Detekt)**
-- Kotlin static analysis for code smells
-- Enforces code style conventions
-- Identifies potential bugs and complexity issues
-
-**Quality Gate 7: Test Reporting**
-- Publishes JUnit test results with detailed summaries
-- Uploads test reports, lint results, and coverage artifacts
-
-### Artifacts Generated
-
-The CI workflow uploads the following artifacts (available for 90 days):
-
-| Artifact | Contents | When Uploaded |
-|----------|----------|---------------|
-| `coverage-report` | Kover HTML + XML reports | Always |
-| `owasp-dependency-check` | Security scan results | Always |
-| `detekt-report` | Static analysis results | Always |
-| `test-results` | JUnit test results + reports | On failure |
-| `lint-results` | Android Lint HTML reports | On failure |
-
-### Performance Optimizations
-
-- Parallel Gradle task execution (`--parallel`)
-- Gradle build cache enabled globally
-- GitHub Actions cache for Gradle dependencies
-- Workflow-level job parallelization where possible
-- Smart path-based triggering (skip docs changes)
-
-### Expected Duration
-
-- Typical run: 3-5 minutes
-- First run (cold cache): 8-10 minutes
+**Trigger:** The workflow runs automatically on push to the `main` branch, ignoring documentation-only changes.
 
 ---
 
-## CD Workflow (cd.yml)
+## Workflow Architecture
 
-### Trigger Conditions
-
-```yaml
-on:
-  push:
-    branches: [ main ]
-```
-
-The CD workflow runs automatically when code is pushed to the `main` branch, indicating production-ready code.
-
-### Deployment Pipeline Stages
+### Pipeline Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    CD PIPELINE ARCHITECTURE                     │
+│                 UNIFIED CD PIPELINE ARCHITECTURE                 │
+│                                                                  │
+│  Trigger: Push to main branch                                   │
 └─────────────────────────────────────────────────────────────────┘
 
    ┌──────────────────┐
@@ -143,7 +41,7 @@ The CD workflow runs automatically when code is pushed to the `main` branch, ind
             │
             ▼
    ┌──────────────────────────────────────────────────────────────┐
-   │ STAGE 1: Quality Gates (Same as CI)                          │
+   │ STAGE 1: Quality Gates (Automatic)                           │
    │  ├─ Build (assembleDebug)                                   │
    │  ├─ Unit Tests (test)                                       │
    │  ├─ Lint (lint)                                             │
@@ -154,7 +52,7 @@ The CD workflow runs automatically when code is pushed to the `main` branch, ind
             │ All quality gates pass
             ▼
    ┌──────────────────────────────────────────────────────────────┐
-   │ STAGE 2: Instrumented Tests                                  │
+   │ STAGE 2: Instrumented Tests (Automatic)                      │
    │  └─ Android Emulator (API 34, Nexus 6)                      │
    │     └─ connectedAndroidTest                                  │
    └────────┬─────────────────────────────────────────────────────┘
@@ -169,7 +67,7 @@ The CD workflow runs automatically when code is pushed to the `main` branch, ind
             │ Deploy succeeds
             ▼
    ┌──────────────────────────────────────────────────────────────┐
-   │ STAGE 3.5: Smoke Test Internal Release                       │
+   │ STAGE 4: Smoke Test Internal Release (Automatic)             │
    │  ├─ Download APK                                            │
    │  ├─ Install on Emulator                                     │
    │  ├─ Launch App                                              │
@@ -179,48 +77,185 @@ The CD workflow runs automatically when code is pushed to the `main` branch, ind
             │ Smoke tests pass
             ▼
    ┌──────────────────────────────────────────────────────────────┐
-   │ STAGE 4: Promote to Alpha (MANUAL APPROVAL REQUIRED)         │
+   │ STAGE 5: Promote to Alpha (MANUAL APPROVAL REQUIRED)         │
    │  └─ Promote same AAB to Alpha Track                         │
    └────────┬─────────────────────────────────────────────────────┘
             │ Manual approval granted
             ▼
    ┌──────────────────────────────────────────────────────────────┐
-   │ STAGE 5: Promote to Beta (MANUAL APPROVAL REQUIRED)          │
+   │ STAGE 6: Promote to Beta (MANUAL APPROVAL REQUIRED)          │
    │  └─ Promote same AAB to Beta Track                          │
    └────────┬─────────────────────────────────────────────────────┘
             │ Manual approval granted
             ▼
    ┌──────────────────────────────────────────────────────────────┐
-   │ STAGE 6: Promote to Production (MANUAL APPROVAL REQUIRED)    │
+   │ STAGE 7: Promote to Production (MANUAL APPROVAL REQUIRED)    │
    │  ├─ Promote same AAB to Production Track                    │
    │  └─ Create GitHub Release (v{version})                      │
    └──────────────────────────────────────────────────────────────┘
 ```
 
-### Stage 1: Build and Test (Quality Gates)
+---
 
-**Purpose**: Ensure code quality before any deployment
+## Stage 1: Quality Gates
 
-**Steps**:
-1. Checkout code
-2. Setup JDK 21 with Gradle cache
-3. Decode and validate `google-services.json`
-4. Run parallel quality gates:
-   - `assembleDebug`: Compile debug build
-   - `test`: Run all unit tests
-   - `lint`: Android Lint analysis
-5. Generate and verify code coverage (Kover)
-6. Run security scan (OWASP)
-7. Run static analysis (Detekt)
-8. Publish test reports
+**Purpose**: Ensure code quality and prevent deployment of broken code
 
-**Artifacts**: `cd-coverage-report`, `cd-owasp-report`, `cd-detekt-report`, `test-results`
+**Execution**: Runs automatically on every push to main branch
 
-**Outcome**: If any quality gate fails, the pipeline stops immediately. No deployment occurs.
+**Environment Setup**:
+- JDK: Temurin 21 (LTS)
+- Caching: Aggressive Gradle caching for faster builds
+  - Build cache: `~/.gradle/caches`
+  - Wrapper cache: `~/.gradle/wrapper`
+  - Custom build cache: `~/.gradle/build-cache`
+- Firebase Config: Decodes `GOOGLE_SERVICES_JSON_BASE64` secret
+- Validation: Ensures `google-services.json` is valid JSON
 
-### Stage 2: Instrumented Tests
+**Quality Gates (Parallel Execution)**:
+
+The workflow runs multiple quality gates in parallel using the `--parallel` flag:
+
+```bash
+./gradlew assembleDebug test lint --parallel
+```
+
+### Quality Gate 1: Compilation
+- Assembles debug APK
+- Validates Kotlin/Java compilation
+- Ensures all dependencies resolve correctly
+
+**Failure Reasons**:
+- Syntax errors
+- Missing dependencies
+- Resource conflicts
+- API compatibility issues
+
+### Quality Gate 2: Unit Tests
+- Runs all JUnit tests (`./gradlew test`)
+- Validates business logic, ViewModels, repositories
+- Tests run with Robolectric for Android-specific code
+
+**Coverage**:
+- ViewModels
+- Repositories
+- Use cases
+- Utility functions
+- Data transformations
+
+**Technology**: JUnit 4, Mockito, Robolectric
+
+**Failure Reasons**:
+- Assertion failures
+- Unhandled exceptions
+- Test timeouts
+- Mock verification failures
+
+### Quality Gate 3: Lint Analysis
+- Android Lint checks for code quality issues
+- Validates XML resources, unused resources, API level issues
+- Enforces Android best practices
+
+**Checks**:
+- Unused resources
+- API level compatibility
+- Security vulnerabilities
+- Performance issues
+- Accessibility concerns
+- Internationalization
+
+**Severity Levels**:
+- Error: Blocks build
+- Warning: Reported but doesn't block
+- Informational: Suggestions
+
+### Quality Gate 4: Code Coverage (Kover)
+- Generates XML and HTML coverage reports
+- Target thresholds:
+  - Line coverage: 90%
+  - Branch coverage: 85%
+- Status: `continue-on-error: true` (allows incremental progress)
+
+**Reports Generated**:
+- XML (for CI parsing)
+- HTML (for human review)
+
+**How to Review**:
+1. Download `cd-coverage-report` artifact
+2. Open `index.html` in browser
+3. Navigate to uncovered code
+4. Add missing tests
+
+### Quality Gate 5: Security Scanning (OWASP Dependency Check)
+- Scans all dependencies for known vulnerabilities
+- Checks against NVD (National Vulnerability Database)
+- Generates detailed HTML reports
+- Status: `continue-on-error: true` (handles NVD API rate limits gracefully)
+
+**Database**: National Vulnerability Database (NVD)
+
+**Checks**:
+- Known CVEs in dependencies
+- Outdated libraries with security fixes
+- Transitive dependency vulnerabilities
+
+**Configuration**:
+- Fail on CVSS >= 7.0 (high severity)
+- `failOnError: false` (handles NVD API issues)
+
+**Common Issues**:
+- NVD API rate limiting (403 errors)
+- Solution: Add `NVD_API_KEY` secret
+
+### Quality Gate 6: Static Analysis (Detekt)
+- Kotlin static analysis for code smells
+- Enforces code style conventions
+- Identifies potential bugs and complexity issues
+
+**Categories**:
+- Complexity (cyclomatic complexity, long methods)
+- Code smells (magic numbers, duplicated code)
+- Formatting (indentation, naming conventions)
+- Performance (inefficient collections, string concatenation)
+
+**Configuration**: See `detekt.yml` in project root
+
+**Failure Reasons**:
+- High cyclomatic complexity
+- Naming violations
+- Performance anti-patterns
+
+### Quality Gate 7: Test Reporting
+- Publishes JUnit test results with detailed summaries
+- Uploads test reports, lint results, and coverage artifacts
+
+**Artifacts Generated** (available for 90 days):
+
+| Artifact | Contents | When Uploaded |
+|----------|----------|---------------|
+| `cd-coverage-report` | Kover HTML + XML reports | Always |
+| `cd-owasp-report` | Security scan results | Always |
+| `cd-detekt-report` | Static analysis results | Always |
+| `test-results` | JUnit test results + reports | On failure |
+
+**Outcome**: If any blocking quality gate fails, the pipeline stops immediately. No deployment occurs.
+
+**Performance Optimizations**:
+- Parallel Gradle task execution (`--parallel`)
+- Gradle build cache enabled globally
+- GitHub Actions cache for Gradle dependencies
+- Workflow-level job parallelization where possible
+- Smart path-based triggering (skip docs changes)
+
+**Expected Duration**: 3-5 minutes (typical run), 8-10 minutes (cold cache)
+
+---
+
+## Stage 2: Instrumented Tests
 
 **Purpose**: Validate UI and integration tests on actual Android environment
+
+**Execution**: Runs automatically after quality gates pass
 
 **Environment**:
 - Android Emulator API 34 (Android 14)
@@ -235,13 +270,31 @@ The CD workflow runs automatically when code is pushed to the `main` branch, ind
 4. Run `./gradlew connectedAndroidTest`
 5. Upload test reports on failure
 
+**Coverage**:
+- Jetpack Compose UI tests
+- Navigation flows
+- Database operations (Room)
+- Android APIs (permissions, intents)
+
+**Technology**: Espresso, Compose Testing, UI Automator
+
+**Failure Reasons**:
+- UI element not found
+- Test timeouts
+- Emulator crashes
+- Race conditions
+
 **Duration**: 10-15 minutes (includes emulator boot)
 
 **Outcome**: UI tests must pass before deployment to internal track.
 
-### Stage 3: Deploy to Internal Track
+---
+
+## Stage 3: Deploy to Internal Track
 
 **Purpose**: Automatically deploy to Play Store internal testing track
+
+**Execution**: Runs automatically after instrumented tests pass
 
 **Environment**: `internal` (GitHub Environment)
 
@@ -265,9 +318,13 @@ The CD workflow runs automatically when code is pushed to the `main` branch, ind
 
 **Outcome**: App is available to internal testers immediately.
 
-### Stage 3.5: Smoke Test Internal Release
+---
+
+## Stage 4: Smoke Test Internal Release
 
 **Purpose**: Verify the deployed APK works correctly on real Android environment
+
+**Execution**: Runs automatically after internal deployment succeeds
 
 **Environment**: Android Emulator API 34, Nexus 6
 
@@ -293,11 +350,15 @@ The CD workflow runs automatically when code is pushed to the `main` branch, ind
 
 **Outcome**: If smoke tests fail, the promotion pipeline stops. Investigate and fix before retrying.
 
-### Stage 4: Promote to Alpha
+---
+
+## Stage 5: Promote to Alpha
 
 **Purpose**: Release to alpha testers for broader testing
 
 **Trigger**: Manual approval required via GitHub Environments
+
+**Execution**: Only runs after smoke tests pass and manual approval granted
 
 **Environment**: `alpha` (GitHub Environment)
 
@@ -323,7 +384,9 @@ The CD workflow runs automatically when code is pushed to the `main` branch, ind
 
 **Outcome**: App is available to alpha testers (typically a small group of trusted users).
 
-### Stage 5: Promote to Beta
+---
+
+## Stage 6: Promote to Beta
 
 **Purpose**: Release to beta testers for wider pre-production testing
 
@@ -336,7 +399,7 @@ The CD workflow runs automatically when code is pushed to the `main` branch, ind
 2. Promote to beta track
 3. In-app update priority: 4
 
-**Approval Process**: Same as alpha (see Stage 4)
+**Approval Process**: Same as alpha (see Stage 5)
 
 **Best Practices Before Approval**:
 - Monitor alpha feedback for 24-48 hours
@@ -346,7 +409,9 @@ The CD workflow runs automatically when code is pushed to the `main` branch, ind
 
 **Outcome**: App is available to beta testers (larger group, more diverse testing).
 
-### Stage 6: Promote to Production
+---
+
+## Stage 7: Promote to Production
 
 **Purpose**: Release to all users on Google Play Store
 
@@ -382,131 +447,6 @@ The CD workflow runs automatically when code is pushed to the `main` branch, ind
 
 ---
 
-## Quality Gates Reference
-
-### 1. Compilation (assembleDebug)
-**Purpose**: Ensure code compiles without errors
-
-**Checks**:
-- Kotlin/Java compilation
-- Resource processing
-- Dependency resolution
-- BuildConfig generation
-
-**Failure Reasons**:
-- Syntax errors
-- Missing dependencies
-- Resource conflicts
-- API compatibility issues
-
-### 2. Unit Tests (test)
-**Purpose**: Validate business logic and components
-
-**Coverage**:
-- ViewModels
-- Repositories
-- Use cases
-- Utility functions
-- Data transformations
-
-**Technology**: JUnit 4, Mockito, Robolectric
-
-**Failure Reasons**:
-- Assertion failures
-- Unhandled exceptions
-- Test timeouts
-- Mock verification failures
-
-### 3. Lint Analysis (lint)
-**Purpose**: Enforce Android best practices
-
-**Checks**:
-- Unused resources
-- API level compatibility
-- Security vulnerabilities
-- Performance issues
-- Accessibility concerns
-- Internationalization
-
-**Severity Levels**:
-- Error: Blocks build
-- Warning: Reported but doesn't block
-- Informational: Suggestions
-
-### 4. Code Coverage (Kover)
-**Purpose**: Ensure adequate test coverage
-
-**Thresholds**:
-- Line coverage: 90% (target)
-- Branch coverage: 85% (target)
-
-**Status**: `continue-on-error: true` (soft requirement)
-
-**Reports Generated**:
-- XML (for CI parsing)
-- HTML (for human review)
-
-**How to Review**:
-1. Download `coverage-report` artifact
-2. Open `index.html` in browser
-3. Navigate to uncovered code
-4. Add missing tests
-
-### 5. Security Scanning (OWASP Dependency Check)
-**Purpose**: Identify vulnerable dependencies
-
-**Database**: National Vulnerability Database (NVD)
-
-**Checks**:
-- Known CVEs in dependencies
-- Outdated libraries with security fixes
-- Transitive dependency vulnerabilities
-
-**Configuration**:
-- Fail on CVSS >= 7.0 (high severity)
-- `failOnError: false` (handles NVD API issues)
-
-**Common Issues**:
-- NVD API rate limiting (403 errors)
-- Solution: Add `NVD_API_KEY` secret
-
-### 6. Static Analysis (Detekt)
-**Purpose**: Detect code smells and style violations
-
-**Categories**:
-- Complexity (cyclomatic complexity, long methods)
-- Code smells (magic numbers, duplicated code)
-- Formatting (indentation, naming conventions)
-- Performance (inefficient collections, string concatenation)
-
-**Configuration**: See `detekt.yml` in project root
-
-**Failure Reasons**:
-- High cyclomatic complexity
-- Naming violations
-- Performance anti-patterns
-
-### 7. Instrumented Tests (connectedAndroidTest)
-**Purpose**: Validate UI and Android-specific functionality
-
-**Environment**: Real Android emulator
-
-**Coverage**:
-- Jetpack Compose UI tests
-- Navigation flows
-- Database operations (Room)
-- Android APIs (permissions, intents)
-
-**Technology**: Espresso, Compose Testing, UI Automator
-
-**Failure Reasons**:
-- UI element not found
-- Test timeouts
-- Emulator crashes
-- Race conditions
-
----
-
 ## Deployment Process
 
 ### Standard Deployment Flow
@@ -516,19 +456,21 @@ Follow this process to deploy a new version to production:
 #### Phase 1: Prepare Release
 1. Ensure all features are merged to `develop` branch
 2. Create PR from `develop` to `main`
-3. Wait for CI quality gates to pass
+3. Review code changes carefully
 4. Get code review approval
 5. Merge PR to `main`
 
-#### Phase 2: Automatic Internal Deployment
+#### Phase 2: Automatic Quality & Deployment
 1. Merge triggers CD workflow automatically
 2. Monitor workflow in GitHub Actions
-3. Wait for quality gates to pass (5-10 min)
-4. Wait for instrumented tests to pass (10-15 min)
-5. Wait for internal deployment to complete (5 min)
-6. Wait for smoke tests to pass (10 min)
+3. Quality gates run first (5-10 min):
+   - Build, test, lint
+   - Coverage, security, static analysis
+4. Instrumented tests run (10-15 min)
+5. Internal deployment happens automatically (5 min)
+6. Smoke tests verify deployment (10 min)
 
-**Total time**: 30-40 minutes
+**Total automatic time**: 30-40 minutes
 
 #### Phase 3: Internal Testing
 1. Download app from Play Console internal track
@@ -570,7 +512,7 @@ Follow this process to deploy a new version to production:
 
 #### Phase 8: Promote to Production
 1. Verify all metrics are green
-2. Complete pre-approval checklist (see Stage 6)
+2. Complete pre-approval checklist (see Stage 7)
 3. Get team sign-off
 4. Approve production promotion in GitHub Actions
 5. Monitor rollout carefully
@@ -589,7 +531,7 @@ For critical production issues:
 1. Create hotfix branch from `main`
 2. Implement and test fix
 3. Merge hotfix to `main` (expedited review)
-4. CD workflow triggers automatically
+4. CD workflow triggers automatically with quality gates
 5. Fast-track through testing tracks:
    - Internal: 1 hour testing
    - Alpha: 4 hours testing
@@ -695,7 +637,7 @@ base64 app/google-services.json | xclip -selection clipboard  # Linux
 3. Add as GitHub secret
 4. Name: `GOOGLE_SERVICES_JSON_BASE64`
 
-**Validation**: CI decodes and validates JSON format
+**Validation**: Workflow decodes and validates JSON format
 
 #### 2. RELEASE_KEYSTORE_BASE64
 
@@ -820,7 +762,7 @@ keytool -list -keystore release.keystore
 
 **Verify secrets are working**:
 
-1. Trigger CI workflow (make a PR)
+1. Trigger workflow (push to main)
 2. Check "Create google-services.json" step
 3. Should see: "google-services.json is valid JSON (X bytes)"
 4. If errors, re-encode and re-add secret
@@ -896,7 +838,7 @@ Verification failed: Line coverage 85% is less than 90%
 - Use `@Composable` preview tests for UI
 
 **How to Fix**:
-1. Download `coverage-report` artifact
+1. Download `cd-coverage-report` artifact
 2. Open `html/index.html` in browser
 3. Navigate to red/yellow highlighted code
 4. Write tests for uncovered lines/branches
@@ -1118,7 +1060,7 @@ Detekt found 15 issues with complexity rules
 ```
 
 **Solution**:
-1. Download `detekt-report` artifact
+1. Download `cd-detekt-report` artifact
 2. Review HTML report
 3. Fix issues or suppress if intentional:
    ```kotlin
@@ -1147,7 +1089,6 @@ Detekt found 15 issues with complexity rules
 
 **Views**:
 - All workflows
-- CI Quality Gates (ci.yml runs)
 - Continuous Deployment (cd.yml runs)
 - Filter by status: Success, Failure, Cancelled
 
@@ -1240,10 +1181,10 @@ Detekt found 15 issues with complexity rules
 Run this checklist daily during rollouts, weekly otherwise:
 
 **GitHub Actions**:
-- [ ] Latest CI run: Passed
-- [ ] Latest CD run: Passed (or pending approval)
+- [ ] Latest workflow run: Passed
 - [ ] No failed runs in last 7 days (excluding known issues)
 - [ ] Artifact storage < 80% of limit
+- [ ] Build times within expected range
 
 **Play Console**:
 - [ ] Crash-free rate > 99.5%
@@ -1261,215 +1202,6 @@ Run this checklist daily during rollouts, weekly otherwise:
 ---
 
 ## Architecture Diagrams
-
-### CI Workflow Flow
-
-```
-┌────────────────────────────────────────────────────────────────┐
-│                        CI WORKFLOW (ci.yml)                     │
-│                                                                 │
-│  Triggers:                                                      │
-│    - Pull Request → main                                        │
-│    - Push → main/develop                                        │
-└────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-                    ┌────────────────────┐
-                    │  Setup Environment  │
-                    │  - JDK 21          │
-                    │  - Gradle Cache    │
-                    │  - google-services │
-                    └─────────┬──────────┘
-                              │
-                              ▼
-        ┌─────────────────────────────────────────────┐
-        │      Parallel Quality Gates Execution       │
-        └─────────────────────────────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        │                     │                     │
-        ▼                     ▼                     ▼
-┌───────────────┐     ┌───────────────┐     ┌───────────────┐
-│ assembleDebug │     │     test      │     │     lint      │
-│   (Build)     │     │ (Unit Tests)  │     │  (Analysis)   │
-└───────┬───────┘     └───────┬───────┘     └───────┬───────┘
-        │                     │                     │
-        └─────────────────────┴─────────────────────┘
-                              │
-                              ▼
-        ┌─────────────────────────────────────────────┐
-        │         Sequential Quality Gates            │
-        └─────────────────────────────────────────────┘
-                              │
-                    ┌─────────┴─────────┐
-                    │                   │
-                    ▼                   ▼
-        ┌─────────────────────┐  ┌─────────────────────┐
-        │  Code Coverage      │  │  Security Scan      │
-        │  (Kover)            │  │  (OWASP)            │
-        │  - 90% line         │  │  - NVD API          │
-        │  - 85% branch       │  │  - CVE check        │
-        └─────────┬───────────┘  └─────────┬───────────┘
-                  │                        │
-                  └────────────┬───────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │  Static Analysis    │
-                    │  (Detekt)           │
-                    │  - Complexity       │
-                    │  - Code smells      │
-                    └─────────┬───────────┘
-                              │
-                              ▼
-                    ┌─────────────────────┐
-                    │  Publish Reports    │
-                    │  - JUnit Report     │
-                    │  - Upload Artifacts │
-                    └─────────┬───────────┘
-                              │
-                              ▼
-                    ┌─────────────────────┐
-                    │  Build Summary      │
-                    │  ✅ All Gates Pass  │
-                    └─────────────────────┘
-```
-
-### CD Workflow Deployment Pipeline
-
-```
-┌───────────────────────────────────────────────────────────────────┐
-│                  CD WORKFLOW DEPLOYMENT PIPELINE                   │
-│                                                                    │
-│  Trigger: Push to main                                             │
-└───────────────────────────────────────────────────────────────────┘
-                                │
-                    ┌───────────┴───────────┐
-                    │   Quality Gates       │
-                    │   (Same as CI)        │
-                    │   ✓ Build             │
-                    │   ✓ Test              │
-                    │   ✓ Lint              │
-                    │   ✓ Coverage          │
-                    │   ✓ Security          │
-                    │   ✓ Static Analysis   │
-                    └───────────┬───────────┘
-                                │ Pass
-                                ▼
-                    ┌───────────────────────┐
-                    │ Instrumented Tests    │
-                    │ Android Emulator      │
-                    │ API 34, Nexus 6       │
-                    │ connectedAndroidTest  │
-                    └───────────┬───────────┘
-                                │ Pass
-                                ▼
-            ┌───────────────────────────────────────┐
-            │        Build Release Artifacts        │
-            │  ┌─────────────────────────────────┐  │
-            │  │ 1. Decode release.keystore     │  │
-            │  │ 2. bundleRelease (AAB)         │  │
-            │  │ 3. assembleRelease (APK)       │  │
-            │  │ 4. Sign with release key       │  │
-            │  └─────────────────────────────────┘  │
-            └───────────────┬───────────────────────┘
-                            │
-                            ▼
-            ┌───────────────────────────────────────┐
-            │   Upload to Play Store Internal       │
-            │   Track: internal                     │
-            │   Status: completed                   │
-            │   Priority: 2                         │
-            │                                       │
-            │   Artifacts Saved:                    │
-            │   - internal-aab-v{version}          │
-            │   - internal-apk-v{version}          │
-            └───────────────┬───────────────────────┘
-                            │ Deploy Success
-                            ▼
-            ┌───────────────────────────────────────┐
-            │          Smoke Test Internal          │
-            │  ┌─────────────────────────────────┐  │
-            │  │ 1. Download APK artifact       │  │
-            │  │ 2. Launch emulator (API 34)    │  │
-            │  │ 3. Install APK                 │  │
-            │  │ 4. Launch MainActivity         │  │
-            │  │ 5. Verify no crashes           │  │
-            │  │ 6. Check UI elements           │  │
-            │  │ 7. Take screenshot             │  │
-            │  └─────────────────────────────────┘  │
-            └───────────────┬───────────────────────┘
-                            │ Smoke Tests Pass
-                            ▼
-            ┌───────────────────────────────────────┐
-            │     🚨 MANUAL APPROVAL REQUIRED 🚨    │
-            │                                       │
-            │     Environment: alpha                │
-            │     Reviewers: Team leads            │
-            │                                       │
-            │     [ Review deployments ]            │
-            └───────────────┬───────────────────────┘
-                            │ Approved
-                            ▼
-            ┌───────────────────────────────────────┐
-            │       Promote to Alpha Track          │
-            │   (Same AAB, no rebuild)             │
-            │   Track: alpha                       │
-            │   Priority: 3                         │
-            └───────────────┬───────────────────────┘
-                            │ Alpha Deployed
-                            ▼
-            ┌───────────────────────────────────────┐
-            │     🚨 MANUAL APPROVAL REQUIRED 🚨    │
-            │                                       │
-            │     Environment: beta                 │
-            │     Testing period: 24-48h           │
-            │                                       │
-            │     [ Review deployments ]            │
-            └───────────────┬───────────────────────┘
-                            │ Approved
-                            ▼
-            ┌───────────────────────────────────────┐
-            │       Promote to Beta Track           │
-            │   (Same AAB, no rebuild)             │
-            │   Track: beta                        │
-            │   Priority: 4                         │
-            └───────────────┬───────────────────────┘
-                            │ Beta Deployed
-                            ▼
-            ┌───────────────────────────────────────┐
-            │     🚨 MANUAL APPROVAL REQUIRED 🚨    │
-            │                                       │
-            │     Environment: production           │
-            │     Testing period: 7+ days          │
-            │     Critical checks required         │
-            │                                       │
-            │     [ Review deployments ]            │
-            └───────────────┬───────────────────────┘
-                            │ Approved
-                            ▼
-            ┌───────────────────────────────────────┐
-            │    Promote to Production Track        │
-            │   (Same AAB, no rebuild)             │
-            │   Track: production                  │
-            │   Priority: 5                         │
-            │                                       │
-            │   + Create GitHub Release            │
-            │     Tag: v{version}                  │
-            │     Attach: AAB + APK                │
-            └───────────────┬───────────────────────┘
-                            │
-                            ▼
-            ┌───────────────────────────────────────┐
-            │      🎉 PRODUCTION RELEASE! 🎉       │
-            │                                       │
-            │   App live to all users              │
-            │   GitHub release created             │
-            │   Version tagged in Git              │
-            │                                       │
-            │   Next: Monitor metrics closely      │
-            └───────────────────────────────────────┘
-```
 
 ### Quality Gates Dependency Graph
 
@@ -1542,9 +1274,9 @@ Legend:
 ┌─────────────────────────────────────────────────────────────┐
 │                   Quality Gates Stage                        │
 │  Generates:                                                  │
-│    • coverage-report (HTML + XML)                           │
-│    • owasp-dependency-check (Security scan)                 │
-│    • detekt-report (Static analysis)                        │
+│    • cd-coverage-report (HTML + XML)                        │
+│    • cd-owasp-report (Security scan)                        │
+│    • cd-detekt-report (Static analysis)                     │
 │    • test-results (JUnit reports)                           │
 └────────┬────────────────────────────────────────────────────┘
          │ All gates pass
@@ -1609,7 +1341,7 @@ Legend:
          │
          ▼
      ┌───────┐
-     │ 🎉 DONE│
+     │  DONE │
      └───────┘
 
 Key Points:
@@ -1626,7 +1358,7 @@ Key Points:
 ### Common Commands
 
 ```bash
-# Run CI locally (before pushing)
+# Run quality gates locally (before pushing)
 ./gradlew assembleDebug test lint koverVerify dependencyCheckAnalyze detekt
 
 # Run instrumented tests locally
@@ -1646,15 +1378,17 @@ open app/build/reports/kover/html/index.html
 ./gradlew clean
 ```
 
-### Workflow Trigger Patterns
+### Workflow Trigger
 
-| Event | CI (ci.yml) | CD (cd.yml) |
-|-------|-------------|-------------|
-| PR to main | ✅ Runs | ❌ Skips |
-| Push to main | ✅ Runs | ✅ Runs |
-| Push to develop | ✅ Runs | ❌ Skips |
-| Push to feature/* | ❌ Skips | ❌ Skips |
-| Doc changes (*.md) | ❌ Skips | ❌ Skips |
+| Event | cd.yml Behavior |
+|-------|-----------------|
+| Push to main | ✅ Runs (quality gates → deploy) |
+| PR to main | ❌ Skips (no automated checks on PRs) |
+| Push to develop | ❌ Skips |
+| Push to feature/* | ❌ Skips |
+| Doc changes (*.md) | ❌ Skips |
+
+**Note**: The unified workflow runs quality gates first, then proceeds to deployment if all gates pass.
 
 ### Approval Time Recommendations
 
@@ -1686,6 +1420,14 @@ open app/build/reports/kover/html/index.html
 ---
 
 ## Changelog
+
+### Version 2.0.0 (2025-12-08)
+- Unified CI and CD into single workflow (cd.yml)
+- Quality gates now run in Stage 1 of CD pipeline
+- Simplified workflow architecture (single workflow instead of two)
+- Quality gates always run before deployment on push to main
+- Removed separate ci.yml documentation
+- Updated all references to reflect unified pipeline
 
 ### Version 1.0.0 (2025-12-08)
 - Initial CI/CD documentation

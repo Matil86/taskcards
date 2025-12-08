@@ -94,8 +94,14 @@
 -keepclassmembers class com.google.firebase.auth.** { *; }
 -dontwarn com.google.firebase.auth.**
 
+# Google Credential Manager (replaces deprecated Google Sign-In)
+-keep class androidx.credentials.** { *; }
+-keep class com.google.android.libraries.identity.googleid.** { *; }
+-dontwarn androidx.credentials.**
+
 # Keep auth service implementations
 -keep class de.hipp.android.taskcards.auth.** { *; }
+-keep class de.hipp.app.taskcards.auth.** { *; }
 
 # Room Database
 -keep class * extends androidx.room.RoomDatabase

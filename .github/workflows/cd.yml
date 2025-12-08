@@ -12,6 +12,22 @@ on:
       - 'docs/**'
       - '.github/ISSUE_TEMPLATE/**'
       - 'LICENSE'
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip instrumented tests (if tests already passed)'
+        required: false
+        type: boolean
+        default: false
+      deploy_track:
+        description: 'Initial deployment track'
+        required: false
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+        default: 'internal'
 
 jobs:
   # ==========================================
@@ -123,6 +139,7 @@ jobs:
     name: Instrumented Tests
     runs-on: ubuntu-latest
     needs: build-and-test
+    if: github.event.inputs.skip_tests != 'true'
 
     steps:
       - name: Checkout code
@@ -228,7 +245,11 @@ jobs:
   deploy-internal:
     name: Deploy to Internal Track
     runs-on: ubuntu-latest
-    needs: instrumented-tests
+    needs: [build-and-test, instrumented-tests]
+    if: |
+      always() &&
+      needs.build-and-test.result == 'success' &&
+      (needs.instrumented-tests.result == 'success' || needs.instrumented-tests.result == 'skipped')
     environment:
       name: internal
       url: https://play.google.com/console

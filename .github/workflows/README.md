@@ -20,7 +20,9 @@ This architecture ensures that quality gates always run before deployment, maint
 - Automated smoke testing to verify deployments
 - Fail-fast approach with detailed error reporting
 
-**Trigger:** The workflow runs automatically on push to the `main` branch, ignoring documentation-only changes.
+**Triggers:**
+- **Automatic**: Runs on every push to the `main` branch (ignoring documentation-only changes)
+- **Manual**: Can be triggered from GitHub Actions UI with customizable options (skip tests, choose deployment track)
 
 ---
 
@@ -94,6 +96,67 @@ This architecture ensures that quality gates always run before deployment, maint
    │  └─ Create GitHub Release (v{version})                      │
    └──────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Manual Triggering
+
+The workflow can be triggered manually from the GitHub Actions UI, providing flexibility for ad-hoc deployments or re-running failed stages.
+
+### How to Trigger Manually
+
+1. **Navigate to GitHub Actions**:
+   - Go to your repository on GitHub
+   - Click the "Actions" tab
+   - Select "Continuous Deployment" from the workflow list
+
+2. **Click "Run workflow"**:
+   - You'll see a "Run workflow" button in the top right
+   - Click it to open the manual trigger dialog
+
+3. **Configure Options**:
+   - **Branch**: Select `main` (required)
+   - **Skip instrumented tests**: Check this to skip emulator tests if they've already passed
+   - **Initial deployment track**: Choose where to deploy (internal, alpha, or beta)
+
+4. **Click "Run workflow"** to start the deployment
+
+### Manual Trigger Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| **skip_tests** | Boolean | `false` | Skip instrumented tests if they've already passed. Useful for redeployments or when tests were validated separately. |
+| **deploy_track** | Choice | `internal` | Initial deployment track. Options: `internal`, `alpha`, `beta`. Note: Still requires manual approval for promotions beyond internal. |
+
+### Use Cases for Manual Triggering
+
+**When to Use Manual Trigger:**
+1. **Redeploy After Fix**: Tests passed but deployment failed - skip tests and redeploy
+2. **Hotfix Deployment**: Need to deploy urgently, tests already validated locally
+3. **Direct to Alpha**: Skip internal track for trusted builds (still requires approval)
+4. **Re-run Failed Stage**: Intermittent infrastructure issue, retry without full rebuild
+
+**Best Practices:**
+- ✅ Use automatic trigger (push to main) for regular development workflow
+- ✅ Use manual trigger for exceptional cases or redeployments
+- ✅ Always ensure tests have passed before skipping them
+- ⚠️ Skipping tests bypasses quality gates - use with caution
+- ⚠️ Manual deploys to alpha/beta still require approval at promotion stages
+
+### Workflow Behavior with Manual Trigger
+
+**With `skip_tests = true`:**
+```
+Stage 1: Quality Gates → ✅ Run
+Stage 2: Instrumented Tests → ⏭️ Skipped
+Stage 3: Deploy to Internal → ✅ Run (proceeds if Stage 1 passed)
+Stage 4: Smoke Tests → ✅ Run
+```
+
+**With `deploy_track = alpha`:**
+- Note: This option is for future enhancement
+- Currently, all deployments start at internal track
+- Manual approval gates control promotion to alpha/beta/production
 
 ---
 
@@ -1580,6 +1643,19 @@ open app/build/reports/kover/html/index.html
 ---
 
 ## Changelog
+
+### Version 2.3.0 (2025-12-08)
+- Added manual workflow triggering from GitHub Actions UI
+- Implemented `workflow_dispatch` trigger with customizable options:
+  - `skip_tests` (boolean): Skip instrumented tests if already passed
+  - `deploy_track` (choice): Initial deployment track (internal/alpha/beta)
+- Updated deploy-internal job to handle skipped instrumented tests
+- Added comprehensive manual triggering documentation:
+  - Step-by-step instructions for triggering from GitHub UI
+  - Option descriptions and use cases
+  - Best practices and workflow behavior examples
+- Enables redeployments and hotfixes without full test suite reruns
+- Provides flexibility for exceptional deployment scenarios
 
 ### Version 2.2.0 (2025-12-08)
 - Fixed emulator disk space issues in GitHub Actions runners

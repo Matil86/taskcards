@@ -53,8 +53,8 @@ This architecture ensures that quality gates always run before deployment, maint
             ▼
    ┌──────────────────────────────────────────────────────────────┐
    │ STAGE 2: Instrumented Tests (Automatic)                      │
-   │  └─ Android Emulator (API 34, Nexus 6)                      │
-   │     └─ connectedAndroidTest                                  │
+   │  └─ Android Emulator (API 34, Pixel 6, google_apis)        │
+   │     └─ Boot verification + connectedAndroidTest              │
    └────────┬─────────────────────────────────────────────────────┘
             │ UI tests pass
             ▼
@@ -259,16 +259,46 @@ The workflow runs multiple quality gates in parallel using the `--parallel` flag
 
 **Environment**:
 - Android Emulator API 34 (Android 14)
-- Target: Default (Google APIs)
+- Target: google_apis (more stable than default in CI)
 - Architecture: x86_64
-- Profile: Nexus 6
+- Profile: pixel_6 (modern device profile)
+- Timeout: 45 minutes
+- Hardware Acceleration: swiftshader_indirect (software rendering for CI)
 
-**Steps**:
+**Emulator Configuration**:
+- No snapshot saving (fresh state each run)
+- No window (headless mode)
+- No audio (not needed for tests)
+- No boot animation (faster startup)
+- Animations disabled (more reliable tests)
+- AVD caching enabled (faster subsequent runs)
+- Disk size: 4096M (4GB partition, reduced from default ~8GB)
+- RAM size: 2048M (2GB RAM for stable performance)
+- Heap size: 512M (adequate for test execution)
+
+**Disk Space Management**:
+
+GitHub Actions runners have limited disk space (~14GB usable). The workflow automatically:
+1. Cleans up unnecessary software before emulator launch (~10GB freed)
+   - Removes .NET SDK (`/usr/share/dotnet`)
+   - Removes Haskell toolchain (`/opt/ghc`)
+   - Removes Boost libraries (`/usr/local/share/boost`)
+   - Removes agent tools directory
+2. Configures AVD with reduced partitions (4GB disk, 2GB RAM, 512MB heap)
+3. Verifies sufficient space before emulator launch (minimum 5GB required)
+
+This ensures reliable emulator execution within CI constraints and prevents "Not enough space to create userdata partition" errors.
+
+**Boot Verification Process**:
 1. Setup Android SDK and emulator
 2. Cache AVD for faster startup
-3. Launch emulator
-4. Run `./gradlew connectedAndroidTest`
-5. Upload test reports on failure
+3. Launch emulator with optimized settings
+4. Wait for device: `adb wait-for-device`
+5. Wait for boot completion: Check `sys.boot_completed` property
+6. Stabilization period: 10 second buffer
+7. Verify responsiveness: Check SDK version, unlock screen
+8. Run `./gradlew connectedDebugAndroidTest --stacktrace`
+9. Upload test reports on failure
 
 **Coverage**:
 - Jetpack Compose UI tests
@@ -283,10 +313,17 @@ The workflow runs multiple quality gates in parallel using the `--parallel` flag
 - Test timeouts
 - Emulator crashes
 - Race conditions
+- Emulator not fully booted before tests start
 
-**Duration**: 10-15 minutes (includes emulator boot)
+**Duration**: 15-20 minutes (includes emulator boot verification)
 
 **Outcome**: UI tests must pass before deployment to internal track.
+
+**Troubleshooting**:
+- If emulator fails to start, check timeout setting (45 minutes should be sufficient)
+- If tests are flaky, ensure `disable-animations: true` is set
+- If installation fails, verify `adb wait-for-device` completes successfully
+- Check logs for `ShellCommandUnresponsiveException` - indicates emulator not ready
 
 ---
 
@@ -326,12 +363,39 @@ The workflow runs multiple quality gates in parallel using the `--parallel` flag
 
 **Execution**: Runs automatically after internal deployment succeeds
 
-**Environment**: Android Emulator API 34, Nexus 6
+**Environment**:
+- Android Emulator API 34 (Android 14)
+- Target: google_apis (same as instrumented tests)
+- Architecture: x86_64
+- Profile: pixel_6
+- Timeout: 45 minutes
+
+**Emulator Configuration**:
+- Same settings as instrumented tests for consistency
+- Hardware acceleration: swiftshader_indirect
+- Animations disabled for faster execution
+- Headless mode (no window)
+- Disk size: 4096M (4GB partition)
+- RAM size: 2048M (2GB RAM)
+- Heap size: 512M
+
+**Disk Space Management**:
+
+Same as instrumented tests stage, the workflow automatically cleans up unnecessary software and configures reduced AVD partitions to ensure sufficient disk space is available for emulator execution.
+
+**Boot Verification Process**:
+1. Download APK artifact from previous stage
+2. Launch Android emulator with optimized settings
+3. Wait for device: `adb wait-for-device`
+4. Wait for boot completion: Check `sys.boot_completed` property
+5. Stabilization period: 10 second buffer
+6. Verify responsiveness: Check SDK version, unlock screen
+7. Proceed with smoke tests
 
 **Test Steps**:
-1. Download APK artifact from previous stage
-2. Launch Android emulator
-3. Install APK: `adb install -r app-release.apk`
+1. Find APK: `find . -name "app-release.apk"`
+2. Install APK: `adb install -r -g app-release.apk` (with all permissions)
+3. Verify installation: Check package list with `pm list packages`
 4. Grant runtime permissions (notifications, camera)
 5. Launch MainActivity: `adb shell am start -n de.hipp.app.taskcards/.MainActivity`
 6. Wait 10 seconds for app initialization
@@ -341,14 +405,30 @@ The workflow runs multiple quality gates in parallel using the `--parallel` flag
 10. Take screenshot for manual review
 
 **Success Criteria**:
+- Emulator fully boots and is responsive
 - APK installs without errors
+- Package verified in system after installation
 - App launches successfully
 - No crashes detected in logcat
-- Main activity loads
+- Main activity loads and is visible
+
+**Error Handling**:
+- If APK installation fails, dumps logcat and exits
+- If app not found after installation, exits immediately
+- If app crashes, shows full stack trace from logcat
+- All failures provide detailed diagnostic output
 
 **Artifacts**: `smoke-test-screenshot`
 
+**Duration**: 15-20 minutes (includes emulator boot)
+
 **Outcome**: If smoke tests fail, the promotion pipeline stops. Investigate and fix before retrying.
+
+**Common Issues**:
+- **InstallException**: Emulator not fully booted - boot verification now handles this
+- **ShellCommandUnresponsiveException**: ADB not ready - now includes proper wait
+- **Package not found**: Installation succeeded but package missing - now verified explicitly
+- **Not enough space to create userdata partition**: Insufficient disk space - automatic cleanup and partition size reduction now handles this
 
 ---
 
@@ -860,33 +940,56 @@ kover {
 ```
 connectedAndroidTest FAILED
 Emulator timeout or test failures
+ShellCommandUnresponsiveException: Device not ready
+InstallException: Failed to install-write all apks
 ```
 
 **Common Causes**:
 
-**Cause A: Emulator Boot Timeout**
-- Solution: Increase timeout in workflow
-- Edit `cd.yml` → `android-emulator-runner` → add `emulator-boot-timeout: 900`
+**Cause A: Emulator Not Fully Booted**
+- **Symptom**: `ShellCommandUnresponsiveException` or `InstallException`
+- **Root Cause**: Tests/installation attempted before emulator ready
+- **Solution**: Already fixed in workflow with boot verification
+- **Verification**: Check workflow logs for "Waiting for emulator to fully boot..." step
+- **Details**: Workflow now uses:
+  - `adb wait-for-device` - waits for ADB connection
+  - `sys.boot_completed` check - ensures system fully booted
+  - 10 second stabilization buffer
+  - Responsiveness verification before proceeding
 
-**Cause B: Flaky Tests**
-- Solution: Add retry mechanism
+**Cause B: Insufficient Timeout**
+- **Symptom**: Job cancelled after 30 minutes
+- **Solution**: Already increased to 45 minutes in workflow
+- **Note**: Emulator boot typically takes 5-8 minutes, tests 5-10 minutes
+
+**Cause C: Hardware Acceleration Issues**
+- **Symptom**: Emulator fails to start or crashes
+- **Solution**: Already using `swiftshader_indirect` (software rendering)
+- **Note**: More reliable than hardware acceleration in CI environment
+
+**Cause D: Flaky Tests**
+- **Symptom**: Tests pass locally but fail in CI intermittently
+- **Solution**: Add retry mechanism or fix test stability
 - Use `@FlakyTest` annotation
 - Add explicit waits: `composeTestRule.waitForIdle()`
+- Ensure `disable-animations: true` is set (already configured)
 
-**Cause C: Resource Constraints**
-- Solution: Reduce emulator specs
-- Change profile from `Nexus 6` to `pixel_2`
-- Reduce API level if needed
+**Cause E: Resource Constraints**
+- **Symptom**: Emulator very slow or unresponsive
+- **Solution**: Profile already optimized to `pixel_6`
+- **Alternative**: Could reduce to `pixel_2` if still issues
+- **Note**: Using `google_apis` target for better compatibility
 
 **Debugging Steps**:
 1. Download `instrumented-test-results` artifact
 2. Review HTML test report
 3. Check logcat output in artifact
-4. Reproduce locally:
+4. Look for boot verification logs in workflow output
+5. Reproduce locally:
    ```bash
    ./gradlew connectedAndroidTest
    ```
-5. Run specific test:
+6. Run specific test:
    ```bash
    ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.example.MyTest
    ```
@@ -895,8 +998,65 @@ Emulator timeout or test failures
 - Write deterministic tests (avoid time dependencies)
 - Use `TestCoroutineDispatcher` for coroutines
 - Mock external dependencies (network, sensors)
+- Always wait for emulator boot completion (now automated)
+- Disable animations for consistent test timing (configured)
 
-### 4. Smoke Test Failures
+**Recent Improvements (2025-12-08)**:
+- Added comprehensive boot verification process
+- Increased timeout from 30 to 45 minutes
+- Changed target from `default` to `google_apis` for stability
+- Upgraded profile from `Nexus 6` to `pixel_6` (more modern)
+- Added emulator responsiveness checks before running tests
+- Improved error handling with detailed diagnostics
+- Added automatic disk space cleanup and partition size optimization
+
+### 4. Emulator Disk Space Issues
+
+**Symptom**:
+```
+FATAL | Not enough space to create userdata partition.
+Available: 5641.20 MB at /home/runner/.android/avd/test.avd,
+need 7372.80 MB.
+```
+
+**Cause**: GitHub Actions runners have limited disk space (~14GB usable). Default AVD partition sizes (~8GB) exceed available space after OS and dependencies.
+
+**Solution**: Implemented automatic disk space management (already configured in workflow)
+
+**Implementation Details**:
+
+1. **Disk Cleanup Step** (runs before emulator launch):
+   - Removes .NET SDK: ~3GB freed
+   - Removes Haskell toolchain: ~2GB freed
+   - Removes Boost libraries: ~1GB freed
+   - Removes agent tools: ~4GB freed
+   - **Total freed**: ~10GB
+
+2. **Reduced AVD Partition Sizes**:
+   - `disk-size: 4096M` (4GB instead of default ~8GB)
+   - `heap-size: 512M` (reduced from default ~1GB)
+   - `ram-size: 2048M` (2GB RAM, adequate for API 34)
+
+3. **Pre-flight Disk Space Check**:
+   - Verifies minimum 5GB free space before emulator starts
+   - Fails fast with clear error message if insufficient
+   - Displays current disk usage for debugging
+
+**Prevention**:
+- Workflow automatically handles cleanup (no manual action needed)
+- Partition sizes are optimized for CI environment
+- 4GB disk partition is sufficient for testing workloads
+- 2GB RAM is appropriate for Android 14 emulator
+
+**Expected Free Space After Cleanup**: 10+ GB (sufficient for AVD creation and testing)
+
+**If Issue Persists**:
+1. Check if cleanup step ran successfully
+2. Verify no other jobs consuming disk space concurrently
+3. Consider further reducing disk-size to 3072M (3GB) if needed
+4. Review workflow logs for disk usage before/after cleanup
+
+### 5. Smoke Test Failures
 
 **Symptom**:
 ```
@@ -950,7 +1110,7 @@ FATAL EXCEPTION detected in logcat
 - Use ProGuard test builds in CI
 - Add integration tests that mimic smoke tests
 
-### 5. Play Store Upload Issues
+### 6. Play Store Upload Issues
 
 **Symptom**:
 ```
@@ -1004,7 +1164,7 @@ HTTP 403: forbidden
 - Rotate keys before expiration
 - Monitor Play Console email for policy violations
 
-### 6. Build Timeout
+### 7. Build Timeout
 
 **Symptom**:
 ```
@@ -1031,7 +1191,7 @@ Job was cancelled
 - Enable Gradle build cache (already enabled)
 - Monitor build times in Actions insights
 
-### 7. Keystore Decoding Errors
+### 8. Keystore Decoding Errors
 
 **Symptom**:
 ```
@@ -1052,7 +1212,7 @@ Invalid base64 string
 - Use `| pbcopy` to avoid copy-paste errors
 - Test decoding locally before adding secret
 
-### 8. Detekt Failures
+### 9. Detekt Failures
 
 **Symptom**:
 ```
@@ -1420,6 +1580,47 @@ open app/build/reports/kover/html/index.html
 ---
 
 ## Changelog
+
+### Version 2.2.0 (2025-12-08)
+- Fixed emulator disk space issues in GitHub Actions runners
+- Added automatic disk space cleanup before emulator launch:
+  - Removes .NET SDK, Haskell toolchain, Boost libraries, agent tools
+  - Frees up ~10GB of disk space
+- Reduced AVD partition sizes for CI environment:
+  - `disk-size: 4096M` (4GB instead of default ~8GB)
+  - `heap-size: 512M` (reduced from default ~1GB)
+  - `ram-size: 2048M` (2GB RAM, adequate for API 34)
+- Added pre-flight disk space verification:
+  - Checks minimum 5GB free space before emulator starts
+  - Fails fast with clear error message if insufficient
+  - Displays disk usage before/after cleanup
+- Applied disk space management to both instrumented tests and smoke tests stages
+- Updated documentation with disk space management details
+- Added troubleshooting section for "Not enough space to create userdata partition" errors
+- Expected free space after cleanup: 10+ GB
+
+### Version 2.1.0 (2025-12-08)
+- Fixed emulator stability issues in instrumented tests and smoke tests
+- Added comprehensive boot verification process:
+  - `adb wait-for-device` for ADB readiness
+  - `sys.boot_completed` property check
+  - 10 second stabilization buffer
+  - Emulator responsiveness verification
+- Increased timeout from 30 to 45 minutes for both test stages
+- Changed emulator target from `default` to `google_apis` for better CI stability
+- Upgraded device profile from `Nexus 6` to `pixel_6` (more modern)
+- Added `force-avd-creation: false` for AVD reuse
+- Optimized emulator options for CI environment:
+  - `-gpu swiftshader_indirect` for reliable software rendering
+  - `-no-boot-anim` for faster startup
+  - `-no-snapshot-save` for fresh state
+  - `disable-animations: true` for test reliability
+- Improved error handling in smoke tests:
+  - Verify package installation explicitly
+  - Dump logcat on failures
+  - Better diagnostic output
+- Updated documentation with troubleshooting for emulator issues
+- Removed emojis from script output for cleaner logs
 
 ### Version 2.0.0 (2025-12-08)
 - Unified CI and CD into single workflow (cd.yml)

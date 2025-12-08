@@ -68,6 +68,14 @@
 -keep class com.google.firebase.crashlytics.** { *; }
 -dontwarn com.google.firebase.crashlytics.**
 
+# Firebase Performance Monitoring
+-keep class com.google.firebase.perf.** { *; }
+-keep class com.google.android.gms.common.** { *; }
+-dontwarn com.google.firebase.perf.**
+-keepattributes Signature
+-keepattributes *Annotation*
+-keepattributes SourceFile,LineNumberTable
+
 # Firebase Analytics
 -keep class com.google.firebase.analytics.** { *; }
 -dontwarn com.google.firebase.analytics.**
@@ -151,6 +159,7 @@
 }
 
 # Remove logging in release
+# Note: Keep error and warning logs for Firebase Crashlytics
 -assumenosideeffects class android.util.Log {
     public static *** d(...);
     public static *** v(...);

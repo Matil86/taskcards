@@ -17,6 +17,7 @@ hilt = "2.52"
 hiltNavigationCompose = "1.2.0"
 googleServices = "4.4.2"
 firebaseCrashlytics = "3.0.2"
+firebasePerformance = "1.4.2"
 dependencyCheck = "9.0.7"
 detekt = "1.23.4"
 ktlint = "12.1.0"
@@ -56,6 +57,7 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytics" }
+firebase-performance = { id = "com.google.firebase.firebase-perf", version.ref = "firebasePerformance" }
 dependency-check = { id = "org.owasp.dependencycheck", version.ref = "dependencyCheck" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

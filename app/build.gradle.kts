@@ -8,8 +8,10 @@ plugins {
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.firebase.performance)
     alias(libs.plugins.dependency.check)
     alias(libs.plugins.detekt)
+    id("org.jetbrains.kotlinx.kover") version "0.8.3"
 }
 
 android {
@@ -42,6 +44,14 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Disable monitoring in debug builds to avoid polluting production data
+            configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
+                mappingFileUploadEnabled = false
+            }
+            // Firebase Performance is automatically disabled in debug by the SDK
+        }
+
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -50,10 +60,14 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
-            // Enable Crashlytics mapping file upload for deobfuscated stack traces
+
+            // Enable Firebase Crashlytics mapping file upload for deobfuscated stack traces
             configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
                 mappingFileUploadEnabled = true
             }
+
+            // Firebase Performance monitoring is automatically enabled in release builds
+            // Configure performance thresholds via Firebase Console
         }
     }
     compileOptions {
@@ -151,6 +165,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-crashlytics-ktx")
+    implementation("com.google.firebase:firebase-perf-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
 
@@ -221,11 +236,49 @@ tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
     jvmTarget = "21"
 }
 
+// Kover Code Coverage Configuration
+kover {
+    reports {
+        // Configure verification rules (enforced in CI)
+        verify {
+            rule("Minimum Line Coverage") {
+                bound {
+                    minValue = 90
+                    metric = kotlinx.kover.gradle.plugin.dsl.MetricType.LINE
+                    aggregation = kotlinx.kover.gradle.plugin.dsl.AggregationType.COVERED_PERCENTAGE
+                }
+            }
+            rule("Minimum Branch Coverage") {
+                bound {
+                    minValue = 85
+                    metric = kotlinx.kover.gradle.plugin.dsl.MetricType.BRANCH
+                    aggregation = kotlinx.kover.gradle.plugin.dsl.AggregationType.COVERED_PERCENTAGE
+                }
+            }
+        }
+
+        // Generate XML report for CI/CD integration
+        total {
+            xml {
+                onCheck = false  // Don't auto-generate on check (CI handles it)
+            }
+            html {
+                onCheck = false
+            }
+        }
+    }
+
+    // Exclude generated code and Android framework classes
+    excludeAndroidGenerated = true
+    excludeJavaCode = false
+}
+
 // Make check task depend on security and quality checks
-// Note: dependencyCheckAnalyze and detekt removed from check task to prevent build failures
-// Run them manually with: ./gradlew dependencyCheckAnalyze detekt
+// FULL FIX PRINCIPLE: Security and quality checks MUST run in CI/CD to catch issues early
+// NVD API failures are handled with failOnError=false in dependencyCheck configuration
 tasks.named("check") {
-    // dependsOn("dependencyCheckAnalyze")  // Disabled - run manually to avoid NVD API failures
-    // dependsOn("detekt")  // Disabled - code quality checks should not block builds
-    dependsOn("ktlintCheck")
+    dependsOn("dependencyCheckAnalyze")  // Security vulnerability scanning
+    dependsOn("detekt")  // Static code analysis
+    dependsOn("ktlintCheck")  // Code style enforcement
+    // Note: Coverage verification (koverVerify) runs separately in CI to allow incremental progress
 }

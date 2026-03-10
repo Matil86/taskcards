@@ -110,7 +110,7 @@ fun ShareDialog(
                                 minHeight = Dimensions.MinTouchTarget
                             )
                     ) {
-                        Icon(Icons.Default.QrCode, contentDescription = null)
+                        Icon(Icons.Default.QrCode, contentDescription = stringResource(R.string.generate_qr_code))
                         Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.generate_qr_code))
                     }
@@ -138,7 +138,7 @@ fun ShareDialog(
                             ),
                         enabled = shareUrl != null
                     ) {
-                        Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.share_copy_link), modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(4.dp))
                         Text(stringResource(R.string.share_copy_link))
                     }
@@ -158,7 +158,7 @@ fun ShareDialog(
                             ),
                         enabled = shareUrl != null
                     ) {
-                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Share, contentDescription = stringResource(R.string.share_button), modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(4.dp))
                         Text(stringResource(R.string.share_button))
                     }

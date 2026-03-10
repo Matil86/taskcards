@@ -63,7 +63,7 @@ A beautifully designed Android task management app built with Jetpack Compose fe
 - Configurable widget preferences
 
 ### 🎨 Premium Design
-- Material3 design with custom brand colors (purple/blue palette)
+- Material3 design with custom brand colors (purple/blue/amber palette)
 - Smooth spring-based animations throughout
 - Gradient backgrounds and borders
 - Elevated shadows and depth effects
@@ -156,7 +156,7 @@ Firebase integration is **optional** - the app works fully offline with local st
 3. **Configure Firebase Services**
    - Enable **Authentication** → Sign-in method → Google
    - Enable **Firestore Database** → Create database
-   - Deploy security rules from `firestore.rules` (see [FIRESTORE_RULES_DEPLOYMENT.md](FIRESTORE_RULES_DEPLOYMENT.md))
+   - Deploy security rules from `firestore.rules` (see [FIRESTORE_RULES_DEPLOYMENT.md](docs/FIRESTORE_RULES_DEPLOYMENT.md))
 
 4. **Add Configuration Files**
    ```bash
@@ -182,14 +182,14 @@ Firebase integration is **optional** - the app works fully offline with local st
 ## Tech Stack
 
 - **Language**: Kotlin 2.0.21
-- **UI Framework**: Jetpack Compose (BOM 2024.10.01)
+- **UI Framework**: Jetpack Compose (BOM 2026.02.01)
 - **Architecture**: MVVM with StateFlow
 - **Navigation**: Jetpack Navigation Compose
 - **Backend**: Firebase Firestore + Authentication
 - **Persistence**: Room Database + DataStore
 - **Background Work**: WorkManager (reminders, widget updates)
 - **Widgets**: Jetpack Glance (Material3 widgets)
-- **Dependency Injection**: Hilt
+- **Dependency Injection**: Koin 4.1.1
 - **Concurrency**: Kotlin Coroutines & Flow
 - **QR Codes**: ZXing (deep link sharing)
 - **Serialization**: Kotlinx Serialization JSON
@@ -253,7 +253,7 @@ For in-depth technical details, architecture deep-dives, and implementation guid
 app/src/main/java/de/hipp/app/taskcards/
 ├── model/           # Domain models (TaskItem, SearchFilter, Language, etc.)
 ├── data/            # Repository layer (TaskList, Preferences, Room entities)
-├── di/              # Hilt dependency injection modules
+├── di/              # Koin dependency injection modules
 ├── auth/            # Firebase authentication
 ├── worker/          # WorkManager workers (ReminderWorker, WidgetUpdateWorker, ReminderScheduler)
 ├── qr/              # QR code generation (QRCodeGenerator)

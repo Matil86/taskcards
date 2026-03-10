@@ -2,11 +2,13 @@ package de.hipp.app.taskcards.worker
 
 import android.content.Context
 import android.util.Log
+import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import androidx.work.WorkRequest
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -67,6 +69,12 @@ object DailyReminderScheduler {
             TimeUnit.HOURS
         )
             .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
+            // Backoff applies only to failed-and-retried executions, not to the 24h repeat interval
+            .setBackoffCriteria(
+                BackoffPolicy.EXPONENTIAL,
+                WorkRequest.MIN_BACKOFF_MILLIS,
+                TimeUnit.MILLISECONDS
+            )
             .setConstraints(
                 Constraints.Builder()
                     .setRequiresBatteryNotLow(false) // Allow even on low battery

@@ -25,25 +25,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import dagger.hilt.android.AndroidEntryPoint
 import de.hipp.app.taskcards.data.TaskListMetadataRepository
 import de.hipp.app.taskcards.data.TaskListRepository
 import de.hipp.app.taskcards.ui.theme.TaskCardsTheme
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 /**
  * Activity that shows a dialog to quickly add a task.
  * Launched from the Quick Add widget.
  */
-@AndroidEntryPoint
 class QuickAddActivity : ComponentActivity() {
 
-    @Inject
-    lateinit var taskListRepo: TaskListRepository
-
-    @Inject
-    lateinit var taskListMetadataRepo: TaskListMetadataRepository
+    private val taskListRepo: TaskListRepository by inject()
+    private val taskListMetadataRepo: TaskListMetadataRepository by inject()
 
     @Suppress("LongMethod")
     override fun onCreate(savedInstanceState: Bundle?) {

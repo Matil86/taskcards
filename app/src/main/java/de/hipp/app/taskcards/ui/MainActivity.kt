@@ -5,17 +5,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.components.SingletonComponent
 import de.hipp.app.taskcards.data.preferences.PreferencesRepositoryImpl
-import de.hipp.app.taskcards.deeplink.DeepLinkHandler
 import de.hipp.app.taskcards.di.RepositoryProvider
 import de.hipp.app.taskcards.ui.app.TaskCardsApp
 import de.hipp.app.taskcards.util.LocaleHelper
 
-@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun attachBaseContext(newBase: Context) {
@@ -29,6 +23,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Note: Notification PendingIntents use FLAG_IMMUTABLE and only pass
+        // ACTION_VIEW with taskcards:// deep links, validated in DeepLinkHandler.
 
         // Handle deep link from initial intent
         val deepLinkUri = intent?.data
@@ -49,10 +46,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Entry point for Hilt to provide DeepLinkHandler
-    @EntryPoint
-    @InstallIn(SingletonComponent::class)
-    interface DeepLinkHandlerEntryPoint {
-        fun deepLinkHandler(): DeepLinkHandler
-    }
 }

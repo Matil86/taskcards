@@ -3,7 +3,6 @@ package de.hipp.app.taskcards.ui.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import de.hipp.app.taskcards.data.preferences.PreferencesRepository
 import de.hipp.app.taskcards.data.TaskListMetadataRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,8 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-
 /**
  * ViewModel for smart navigation on app startup.
  * Determines the appropriate starting destination based on:
@@ -20,8 +17,7 @@ import javax.inject.Inject
  * 2. Single available list (if only one)
  * 3. List selector (if multiple lists)
  */
-@HiltViewModel
-class StartupViewModel @Inject constructor(
+class StartupViewModel(
     private val metadataRepo: TaskListMetadataRepository,
     private val prefsRepo: PreferencesRepository
 ) : ViewModel() {

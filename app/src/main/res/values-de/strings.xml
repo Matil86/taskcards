@@ -69,6 +69,8 @@
     <string name="settings_notification_vibration">Benachrichtigungsvibration</string>
     <string name="settings_notification_vibration_description">Vibrieren bei Erinnerungsbenachrichtigungen</string>
     <string name="settings_notifications">Benachrichtigungen</string>
+    <string name="settings_exact_alarm_required">Präzise Erinnerungen erfordern die Berechtigung „Alarme &amp; Erinnerungen"</string>
+    <string name="settings_grant_alarm_permission">Berechtigung erteilen</string>
     <string name="test_notification_title">Test-Erinnerung</string>
     <string name="test_notification_message">So werden Ihre Aufgabenerinnerungen angezeigt</string>
     <string name="sort_by_due_date">Nach Fälligkeitsdatum sortieren</string>

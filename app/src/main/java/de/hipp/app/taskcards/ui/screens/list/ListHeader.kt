@@ -33,7 +33,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.hipp.app.taskcards.R
-import de.hipp.app.taskcards.ui.theme.AccentGreen
+import de.hipp.app.taskcards.ui.theme.BrandAmber
+import de.hipp.app.taskcards.ui.theme.BrandAmberDark
 import de.hipp.app.taskcards.ui.theme.BrandPurple
 import de.hipp.app.taskcards.ui.theme.Dimensions
 import de.hipp.app.taskcards.ui.theme.focusIndicator
@@ -112,8 +113,8 @@ fun ListHeader(
                             )
                             .focusIndicator(shape = RoundedCornerShape(12.dp)),
                         colors = IconButtonDefaults.filledTonalIconButtonColors(
-                            containerColor = if (hasActiveFilters) AccentGreen.copy(alpha = 0.2f) else BrandPurple.copy(alpha = 0.2f),
-                            contentColor = if (hasActiveFilters) AccentGreen else BrandPurple
+                            containerColor = if (hasActiveFilters) BrandAmber.copy(alpha = 0.18f) else BrandPurple.copy(alpha = 0.2f),
+                            contentColor = if (hasActiveFilters) BrandAmberDark else BrandPurple
                         )
                     ) {
                         Icon(Icons.Default.FilterList, contentDescription = stringResource(R.string.filter_title))
@@ -125,7 +126,7 @@ fun ListHeader(
                                 .align(Alignment.TopEnd)
                                 .offset(x = (-4).dp, y = 4.dp),
                             shape = CircleShape,
-                            color = AccentGreen
+                            color = BrandAmberDark
                         ) {}
                     }
                 }

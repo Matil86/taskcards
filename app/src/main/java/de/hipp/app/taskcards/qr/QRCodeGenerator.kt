@@ -13,13 +13,12 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 /**
  * Generates QR codes from deep link URLs.
  * Uses ZXing library for QR code encoding.
  */
-class QRCodeGenerator @Inject constructor() {
+class QRCodeGenerator {
     companion object {
         private const val TAG = "QRCodeGenerator"
         private const val DEFAULT_SIZE = 512

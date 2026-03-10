@@ -1,5 +1,7 @@
 package de.hipp.app.taskcards.ui.app
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,12 +16,63 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import de.hipp.app.taskcards.deeplink.DeepLinkHandler
 import de.hipp.app.taskcards.deeplink.DeepLinkResult
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.koin.compose.getKoin
+
+/**
+ * Stateful handler that shows [DeepLinkImportDialog] and runs the import on confirm.
+ */
+@Composable
+internal fun DeepLinkImportHandler(
+    showImportDialog: Boolean,
+    deepLinkResult: DeepLinkResult?,
+    defaultListId: String,
+    navController: NavHostController,
+    onDismiss: () -> Unit
+) {
+    if (!showImportDialog || deepLinkResult == null) return
+    val context = LocalContext.current
+    val koin = getKoin()
+    DeepLinkImportDialog(
+        result = deepLinkResult,
+        onConfirm = {
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    val handler = koin.get<DeepLinkHandler>()
+                    when (deepLinkResult) {
+                        is DeepLinkResult.Task -> {
+                            handler.importTask(deepLinkResult.task, deepLinkResult.targetListId)
+                            Toast.makeText(context, "Task imported successfully!", Toast.LENGTH_SHORT).show()
+                        }
+                        is DeepLinkResult.List -> {
+                            handler.importList(deepLinkResult.list)
+                            Toast.makeText(context, "List imported successfully!", Toast.LENGTH_SHORT).show()
+                            navController.navigate("list/$defaultListId")
+                        }
+                        else -> {}
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Import failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    Log.e("MainApp", "Failed to import from deep link", e)
+                } finally {
+                    onDismiss()
+                }
+            }
+        },
+        onDismiss = onDismiss
+    )
+}
 
 /**
  * Dialog for confirming deep link imports (tasks or lists).

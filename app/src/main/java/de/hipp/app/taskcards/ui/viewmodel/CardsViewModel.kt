@@ -3,7 +3,6 @@ package de.hipp.app.taskcards.ui.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import de.hipp.app.taskcards.R
 import de.hipp.app.taskcards.analytics.Analytics
 import de.hipp.app.taskcards.analytics.AnalyticsEvents
@@ -22,10 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-@HiltViewModel
-class CardsViewModel @Inject constructor(
+class CardsViewModel(
     savedStateHandle: SavedStateHandle,
     private val repo: TaskListRepository,
     private val strings: StringProvider,
@@ -101,6 +97,13 @@ class CardsViewModel @Inject constructor(
             initialValue = UiState()
         )
 
+    /**
+     * Marks a task as done (or un-done) after the user swipes the card.
+     * Logs analytics events for completed tasks.
+     *
+     * @param taskId The ID of the task to update.
+     * @param complete `true` to mark the task done, `false` to undo.
+     */
     fun swipeComplete(taskId: String, complete: Boolean) {
         viewModelScope.launch(dispatcher) {
             try {
@@ -125,6 +128,7 @@ class CardsViewModel @Inject constructor(
         }
     }
 
+    /** Clears the current error message so the snackbar is dismissed. */
     fun clearError() {
         _errorState.value = null
     }

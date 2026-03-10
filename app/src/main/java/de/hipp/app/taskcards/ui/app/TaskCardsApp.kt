@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import de.hipp.app.taskcards.R
@@ -19,7 +20,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 @Composable
 fun TaskCardsApp(initialDeepLinkUri: android.net.Uri? = null) {
@@ -87,6 +87,17 @@ fun TaskCardsApp(initialDeepLinkUri: android.net.Uri? = null) {
     // Set immediately to avoid race condition
     RepositoryProvider.setAuthenticated(userId != null)
 
+    val userEmail by produceState<String?>(initialValue = null, key1 = userId) {
+        value = if (userId != null) {
+            try {
+                authService.getCurrentUserEmail()
+            } catch (e: Exception) {
+                Log.e("TaskCardsApp", "Failed to get user email", e)
+                null
+            }
+        } else null
+    }
+
     TaskCardsTheme(useHighContrast = highContrastMode) {
         // Always show main app - authentication is optional for local-only usage
         MainApp(
@@ -117,13 +128,7 @@ fun TaskCardsApp(initialDeepLinkUri: android.net.Uri? = null) {
                     }
                 }
             },
-            userEmail = remember(userId) {
-                if (userId != null) {
-                    runBlocking {
-                        authService.getCurrentUserEmail()
-                    }
-                } else null
-            }
+            userEmail = userEmail
         )
     }
 }

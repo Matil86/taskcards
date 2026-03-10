@@ -9,12 +9,15 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import de.hipp.app.taskcards.R
-import de.hipp.app.taskcards.data.preferences.PreferencesRepositoryImpl
-import de.hipp.app.taskcards.di.RepositoryProvider
+import de.hipp.app.taskcards.data.TaskListRepository
+import de.hipp.app.taskcards.data.preferences.PreferencesRepository
+import de.hipp.app.taskcards.data.preferences.Settings
 import de.hipp.app.taskcards.ui.MainActivity
 import de.hipp.app.taskcards.util.Constants
 import de.hipp.app.taskcards.util.LocaleHelper
 import kotlinx.coroutines.flow.first
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
  * WorkManager worker that shows daily reminder notifications.
@@ -23,8 +26,11 @@ import kotlinx.coroutines.flow.first
  */
 class DailyReminderWorker(
     private val context: Context,
-    params: WorkerParameters
-) : CoroutineWorker(context, params) {
+    params: WorkerParameters,
+) : CoroutineWorker(context, params), KoinComponent {
+
+    private val preferencesRepository: PreferencesRepository by inject()
+    private val taskListRepository: TaskListRepository by inject()
 
     companion object {
         private const val TAG = "DailyReminderWorker"
@@ -46,8 +52,7 @@ class DailyReminderWorker(
             Log.d(TAG, "Worker execution timestamp: ${System.currentTimeMillis()}")
 
             // Get user preferences
-            val preferencesRepo = PreferencesRepositoryImpl(context)
-            val settings = preferencesRepo.settings.first()
+            val settings = preferencesRepository.settings.first()
 
             // Wrap context with user's language preference for localized notifications
             val localizedContext = LocaleHelper.setLocale(context, settings.language)
@@ -58,12 +63,11 @@ class DailyReminderWorker(
                 return Result.success()
             }
 
-            // Get repository and list ID
-            val repository = RepositoryProvider.getRepository(context)
-            val listId = preferencesRepo.getLastUsedListId() ?: Constants.DEFAULT_LIST_ID
+            // Get list ID and active tasks
+            val listId = preferencesRepository.getLastUsedListId() ?: Constants.DEFAULT_LIST_ID
 
             // Get active tasks count
-            val tasks = repository.observeTasks(listId).first()
+            val tasks = taskListRepository.observeTasks(listId).first()
             val activeTasks = tasks.filter { !it.done && !it.removed }
 
             if (activeTasks.isEmpty()) {
@@ -76,13 +80,18 @@ class DailyReminderWorker(
             Log.d(TAG, "Daily reminder notification shown for ${activeTasks.size} tasks")
 
             Result.success()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error showing daily reminder notification", e)
+        } catch (e: SecurityException) {
+            // Permanent failure: missing notification permission cannot be fixed by retrying
+            Log.e(TAG, "Permission denied showing daily reminder notification", e)
             Result.failure()
+        } catch (e: Exception) {
+            // Transient failure (e.g. repository or network unavailable): retry with backoff
+            Log.e(TAG, "Transient error showing daily reminder notification, will retry", e)
+            Result.retry()
         }
     }
 
-    private fun showDailyReminder(context: Context, taskCount: Int, settings: de.hipp.app.taskcards.data.preferences.Settings) {
+    private fun showDailyReminder(context: Context, taskCount: Int, settings: Settings) {
         // Create intent to open the app
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

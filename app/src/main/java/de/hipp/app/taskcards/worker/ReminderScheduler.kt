@@ -1,19 +1,17 @@
 package de.hipp.app.taskcards.worker
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.util.Log
-import androidx.work.Data
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import de.hipp.app.taskcards.data.preferences.Settings
 import de.hipp.app.taskcards.model.ReminderType
 import de.hipp.app.taskcards.model.TaskItem
 import java.util.Calendar
-import java.util.concurrent.TimeUnit
 
 /**
- * Manages scheduling and cancellation of task reminder notifications using WorkManager.
+ * Manages scheduling and cancellation of task reminder notifications using AlarmManager exact alarms.
  * Reminders are scheduled based on the task's due date and reminder type.
  */
 class ReminderScheduler(
@@ -21,17 +19,23 @@ class ReminderScheduler(
 ) {
     companion object {
         private const val TAG = "ReminderScheduler"
-        private const val WORK_NAME_PREFIX = "reminder_"
     }
 
     /**
-     * Schedules a reminder notification for a task.
+     * Schedules a reminder notification for a task using an exact alarm.
      * If a reminder already exists for this task, it will be replaced.
      *
      * @param task The task to schedule a reminder for
      * @param settings User settings containing reminder time preferences
      */
     fun scheduleReminder(task: TaskItem, settings: Settings) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        if (!alarmManager.canScheduleExactAlarms()) {
+            Log.w(TAG, "SCHEDULE_EXACT_ALARM permission not granted, skipping")
+            return
+        }
+
         // Don't schedule if reminders are disabled globally
         if (!settings.remindersEnabled) {
             Log.d(TAG, "Reminders disabled, skipping schedule for task ${task.id}")
@@ -53,28 +57,28 @@ class ReminderScheduler(
             return
         }
 
-        val delay = reminderTime - now
+        val intent = Intent(context, ReminderAlarmReceiver::class.java).apply {
+            action = ReminderAlarmReceiver.ACTION_REMINDER
+            putExtra(ReminderAlarmReceiver.KEY_TASK_ID, task.id)
+            putExtra(ReminderAlarmReceiver.KEY_LIST_ID, task.listId)
+            putExtra(ReminderAlarmReceiver.KEY_TASK_TEXT, task.text)
+            putExtra(ReminderAlarmReceiver.KEY_DUE_DATE, task.dueDate)
+        }
 
-        val inputData = Data.Builder()
-            .putString(ReminderWorker.KEY_TASK_ID, task.id)
-            .putString(ReminderWorker.KEY_LIST_ID, task.listId)
-            .putString(ReminderWorker.KEY_TASK_TEXT, task.text)
-            .putLong(ReminderWorker.KEY_DUE_DATE, task.dueDate)
-            .build()
-
-        val workRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
-            .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-            .setInputData(inputData)
-            .addTag(getWorkTag(task.id))
-            .build()
-
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            getWorkName(task.id),
-            ExistingWorkPolicy.REPLACE,
-            workRequest
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            task.id.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        Log.d(TAG, "Scheduled reminder for task ${task.id} at $reminderTime (delay: ${delay}ms)")
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            reminderTime,
+            pendingIntent
+        )
+
+        Log.d(TAG, "Scheduled exact alarm for task ${task.id} at $reminderTime")
     }
 
     /**
@@ -83,8 +87,18 @@ class ReminderScheduler(
      * @param taskId The ID of the task whose reminder should be cancelled
      */
     fun cancelReminder(taskId: String) {
-        WorkManager.getInstance(context).cancelUniqueWork(getWorkName(taskId))
-        Log.d(TAG, "Cancelled reminder for task $taskId")
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, ReminderAlarmReceiver::class.java).apply {
+            action = ReminderAlarmReceiver.ACTION_REMINDER
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            taskId.hashCode(),
+            intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        )
+        pendingIntent?.let { alarmManager.cancel(it) }
+        Log.d(TAG, "Cancelled exact alarm for task $taskId")
     }
 
     /**
@@ -131,7 +145,4 @@ class ReminderScheduler(
 
         return calendar.timeInMillis
     }
-
-    private fun getWorkName(taskId: String): String = "$WORK_NAME_PREFIX$taskId"
-    private fun getWorkTag(taskId: String): String = "reminder_tag_$taskId"
 }

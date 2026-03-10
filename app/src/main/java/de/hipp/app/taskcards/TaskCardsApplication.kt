@@ -2,18 +2,25 @@ package de.hipp.app.taskcards
 
 import android.app.Application
 import android.util.Log
+import androidx.work.Configuration
+import androidx.work.WorkManager
 import com.google.firebase.FirebaseApp
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.perf.FirebasePerformance
 import com.google.firebase.perf.metrics.Trace
-import dagger.hilt.android.HiltAndroidApp
+import de.hipp.app.taskcards.di.appModule
+import de.hipp.app.taskcards.di.viewModelModule
+import de.hipp.app.taskcards.di.workerModule
 import de.hipp.app.taskcards.widget.WidgetUpdateWorker
 import de.hipp.app.taskcards.worker.NotificationChannels
+import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.workmanager.factory.KoinWorkerFactory
+import org.koin.core.context.startKoin
 
 /**
  * Application class for TaskCards.
  *
- * Annotated with @HiltAndroidApp to enable Hilt dependency injection.
+ * Initializes Koin dependency injection framework.
  * Initializes Firebase services (Crashlytics, Performance, Analytics).
  * Schedules periodic widget updates and creates notification channels.
  *
@@ -24,13 +31,26 @@ import de.hipp.app.taskcards.worker.NotificationChannels
  * Monitoring is configured to only run in RELEASE builds
  * to avoid polluting production data with development testing.
  */
-@HiltAndroidApp
 class TaskCardsApplication : Application() {
 
     private var appStartTrace: Trace? = null
 
     override fun onCreate() {
         super.onCreate()
+
+        // Initialize Koin
+        startKoin {
+            androidContext(this@TaskCardsApplication)
+            modules(appModule, viewModelModule, workerModule)
+        }
+
+        // Initialize WorkManager with KoinWorkerFactory
+        WorkManager.initialize(
+            this,
+            Configuration.Builder()
+                .setWorkerFactory(KoinWorkerFactory())
+                .build()
+        )
 
         // Start app initialization trace
         appStartTrace = FirebasePerformance.getInstance().newTrace("app_initialization")

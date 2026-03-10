@@ -69,33 +69,7 @@ class ListSelectorViewModel(
         )
 
     /**
-     * Create a new task list with the given name.
-     * @param name The name of the new list
-     * @return The ID of the newly created list, or null if creation failed
-     */
-    fun createList(name: String): String? {
-        return try {
-            var newListId: String? = null
-            viewModelScope.launch {
-                try {
-                    newListId = metadataRepo.createList(name)
-                    _errorState.value = null
-                    Log.d(TAG, "Created list: $newListId")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error creating list", e)
-                    _errorState.value = "Failed to create list: ${e.message}"
-                }
-            }
-            newListId
-        } catch (e: Exception) {
-            Log.e(TAG, "Error creating list", e)
-            _errorState.value = "Failed to create list: ${e.message}"
-            null
-        }
-    }
-
-    /**
-     * Create a new task list and return the ID via callback.
+     * Create a new task list and return the ID via callback once it has been written to the repository.
      */
     fun createList(name: String, onSuccess: (String) -> Unit) {
         viewModelScope.launch {

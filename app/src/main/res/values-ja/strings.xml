@@ -69,6 +69,8 @@
     <string name="settings_notification_vibration">通知バイブレーション</string>
     <string name="settings_notification_vibration_description">リマインダー通知でバイブレーション</string>
     <string name="settings_notifications">通知</string>
+    <string name="settings_exact_alarm_required">正確なリマインダーには「アラームとリマインダー」の権限が必要です</string>
+    <string name="settings_grant_alarm_permission">権限を付与する</string>
     <string name="test_notification_title">テストリマインダー</string>
     <string name="test_notification_message">タスクリマインダーの表示例</string>
     <string name="sort_by_due_date">期限順に並び替え</string>

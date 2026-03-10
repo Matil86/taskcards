@@ -55,6 +55,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import de.hipp.app.taskcards.R
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 @Composable
 fun QRScannerScreen(
@@ -124,7 +125,10 @@ private fun CameraPreviewWithScanner(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
-    var hasScanned by remember { mutableStateOf(false) }
+    // AtomicBoolean for thread-safe access from camera executor thread and main thread
+    val hasScanned = remember { AtomicBoolean(false) }
+    // Hoist executor so it can be shut down in DisposableEffect to prevent thread leaks
+    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
 
     // Accessibility strings
     val cameraDescription = stringResource(R.string.qr_scanner_camera_description)
@@ -150,8 +154,7 @@ private fun CameraPreviewWithScanner(
                     .addOnSuccessListener { barcodes ->
                         for (barcode in barcodes) {
                             barcode.rawValue?.let { value ->
-                                if (!hasScanned) {
-                                    hasScanned = true
+                                if (hasScanned.compareAndSet(false, true)) {
                                     onQRCodeScanned(value)
                                 }
                             }
@@ -169,6 +172,7 @@ private fun CameraPreviewWithScanner(
     DisposableEffect(Unit) {
         onDispose {
             cameraProviderFuture.get().unbindAll()
+            cameraExecutor.shutdown()
         }
     }
 
@@ -180,7 +184,6 @@ private fun CameraPreviewWithScanner(
             AndroidView(
                 factory = { ctx ->
                     val previewView = PreviewView(ctx)
-                    val cameraExecutor = Executors.newSingleThreadExecutor()
 
                     cameraProviderFuture.addListener({
                         val cameraProvider = cameraProviderFuture.get()
@@ -199,35 +202,36 @@ private fun CameraPreviewWithScanner(
                         )
 
                         imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
-                            if (hasScanned) {
+                            if (hasScanned.get()) {
                                 imageProxy.close()
                                 return@setAnalyzer
                             }
 
-                            @androidx.camera.core.ExperimentalGetImage
-                            val mediaImage = imageProxy.image
-                            if (mediaImage != null) {
-                                val image = InputImage.fromMediaImage(
-                                    mediaImage,
-                                    imageProxy.imageInfo.rotationDegrees
-                                )
+                            @OptIn(androidx.camera.core.ExperimentalGetImage::class)
+                            run {
+                                val mediaImage = imageProxy.image
+                                if (mediaImage != null) {
+                                    val image = InputImage.fromMediaImage(
+                                        mediaImage,
+                                        imageProxy.imageInfo.rotationDegrees
+                                    )
 
-                                barcodeScanner.process(image)
-                                    .addOnSuccessListener { barcodes ->
-                                        for (barcode in barcodes) {
-                                            barcode.rawValue?.let { value ->
-                                                if (!hasScanned) {
-                                                    hasScanned = true
-                                                    onQRCodeScanned(value)
+                                    barcodeScanner.process(image)
+                                        .addOnSuccessListener { barcodes ->
+                                            for (barcode in barcodes) {
+                                                barcode.rawValue?.let { value ->
+                                                    if (hasScanned.compareAndSet(false, true)) {
+                                                        onQRCodeScanned(value)
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
-                                    .addOnCompleteListener {
-                                        imageProxy.close()
-                                    }
-                            } else {
-                                imageProxy.close()
+                                        .addOnCompleteListener {
+                                            imageProxy.close()
+                                        }
+                                } else {
+                                    imageProxy.close()
+                                }
                             }
                         }
 

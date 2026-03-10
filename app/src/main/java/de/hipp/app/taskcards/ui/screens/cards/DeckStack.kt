@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -137,8 +139,8 @@ fun DeckStack(
                             width = 2.dp,
                             brush = Brush.linearGradient(
                                 colors = listOf(
-                                    BrandPurple.copy(alpha = 0.8f * alpha),
-                                    BrandBlue.copy(alpha = 0.8f * alpha)
+                                    BrandPurple.copy(alpha = 0.8f),
+                                    BrandBlue.copy(alpha = 0.8f)
                                 )
                             )
                         )
@@ -160,6 +162,27 @@ fun DeckStack(
                                     )
                                 )
                         )
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            val lineSpacing = 12.dp.toPx()
+                            // alpha is already applied to the parent Surface via .alpha(alpha);
+                            // using a fixed value here avoids doubling the alpha multiplication
+                            // and prevents the Canvas from being re-executed just because alpha
+                            // changes during the deckScale animation.
+                            val lineColor = BrandPurple.copy(alpha = 0.15f)
+                            val strokeWidth = 1.dp.toPx()
+
+                            // Draw diagonal lines at 45 degrees
+                            var x = -size.height
+                            while (x < size.width + size.height) {
+                                drawLine(
+                                    color = lineColor,
+                                    start = Offset(x, 0f),
+                                    end = Offset(x + size.height, size.height),
+                                    strokeWidth = strokeWidth
+                                )
+                                x += lineSpacing
+                            }
+                        }
                     }
                 }
             }

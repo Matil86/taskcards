@@ -32,22 +32,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.lifecycleScope
-import dagger.hilt.android.AndroidEntryPoint
 import de.hipp.app.taskcards.data.TaskListMetadataRepository
 import de.hipp.app.taskcards.model.TaskList
 import de.hipp.app.taskcards.ui.theme.TaskCardsTheme
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 /**
  * Activity for configuring a widget.
  * Allows the user to select which task list to display and the widget type.
  */
-@AndroidEntryPoint
 class WidgetConfigActivity : ComponentActivity() {
 
-    @Inject
-    lateinit var taskListMetadataRepo: TaskListMetadataRepository
+    private val taskListMetadataRepo: TaskListMetadataRepository by inject()
 
     private val widgetId by lazy {
         intent.getIntExtra(

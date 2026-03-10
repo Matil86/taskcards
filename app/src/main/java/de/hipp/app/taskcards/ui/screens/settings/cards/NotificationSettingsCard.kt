@@ -1,5 +1,7 @@
 package de.hipp.app.taskcards.ui.screens.settings.cards
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -16,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -36,8 +40,11 @@ fun NotificationSettingsCard(
     onRemindersToggle: (Boolean) -> Unit,
     onReminderTimeClick: () -> Unit,
     onNotificationSoundToggle: (Boolean) -> Unit,
-    onNotificationVibrationToggle: (Boolean) -> Unit
+    onNotificationVibrationToggle: (Boolean) -> Unit,
+    canScheduleExactAlarms: Boolean
 ) {
+    val context = LocalContext.current
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -58,6 +65,29 @@ fun NotificationSettingsCard(
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
+
+            // Permission warning banner (shown when exact alarm permission is not granted)
+            if (!canScheduleExactAlarms) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_exact_alarm_required),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Button(
+                        onClick = {
+                            context.startActivity(
+                                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                            )
+                        }
+                    ) {
+                        Text(text = stringResource(R.string.settings_grant_alarm_permission))
+                    }
+                }
+            }
 
             // Enable Reminders
             Row(
@@ -80,6 +110,7 @@ fun NotificationSettingsCard(
                 Switch(
                     checked = remindersEnabled,
                     onCheckedChange = onRemindersToggle,
+                    enabled = canScheduleExactAlarms,
                     modifier = Modifier
                         .sizeIn(
                             minWidth = Dimensions.MinTouchTarget,
@@ -89,8 +120,8 @@ fun NotificationSettingsCard(
                 )
             }
 
-            // Reminder Time (only show if reminders enabled)
-            if (remindersEnabled) {
+            // Reminder Time (only show if reminders enabled and permission granted)
+            if (remindersEnabled && canScheduleExactAlarms) {
                 // Extract strings for semantics
                 val clickLabel = stringResource(R.string.settings_reminder_time)
                 val reminderTimeDescription = stringResource(

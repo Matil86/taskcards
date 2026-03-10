@@ -1,5 +1,7 @@
 package de.hipp.app.taskcards.ui.screens.settings
 
+import android.app.AlarmManager
+import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +19,7 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -30,6 +33,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.hipp.app.taskcards.BuildConfig
 import de.hipp.app.taskcards.R
@@ -57,6 +63,24 @@ fun SettingsScreen(
     val state by vm.state.collectAsState()
     val errorState by vm.errorState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var canScheduleExactAlarms by remember {
+        mutableStateOf(
+            (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager).canScheduleExactAlarms()
+        )
+    }
+
+    // Re-check when app comes back to foreground (user may have granted permission in Settings)
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                canScheduleExactAlarms = (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager).canScheduleExactAlarms()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     // Time picker dialog state
     var showTimePickerDialog by remember { mutableStateOf(false) }
@@ -125,7 +149,8 @@ fun SettingsScreen(
             onRemindersToggle = vm::setRemindersEnabled,
             onReminderTimeClick = { showTimePickerDialog = true },
             onNotificationSoundToggle = vm::setNotificationSound,
-            onNotificationVibrationToggle = vm::setNotificationVibration
+            onNotificationVibrationToggle = vm::setNotificationVibration,
+            canScheduleExactAlarms = canScheduleExactAlarms
         )
 
         // Authentication Card

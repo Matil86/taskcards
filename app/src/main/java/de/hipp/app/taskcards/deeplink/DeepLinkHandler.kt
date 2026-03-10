@@ -7,13 +7,12 @@ import de.hipp.app.taskcards.data.TaskListRepository
 import de.hipp.app.taskcards.model.ShareableList
 import de.hipp.app.taskcards.model.ShareableTask
 import kotlinx.coroutines.flow.first
-import javax.inject.Inject
 
 /**
  * Handles deep link processing and task/list import operations.
  * Validates deep links, imports tasks, and creates new lists.
  */
-class DeepLinkHandler @Inject constructor(
+class DeepLinkHandler(
     private val taskRepo: TaskListRepository,
     private val listMetadataRepo: TaskListMetadataRepository
 ) {

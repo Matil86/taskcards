@@ -29,7 +29,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.hipp.app.taskcards.R
-import de.hipp.app.taskcards.di.RepositoryProvider
+import de.hipp.app.taskcards.data.TaskListRepository
+import de.hipp.app.taskcards.data.preferences.PreferencesRepository
+import de.hipp.app.taskcards.di.StringProvider
 import de.hipp.app.taskcards.model.StatusFilter
 import de.hipp.app.taskcards.ui.screens.ActiveFilterChips
 import de.hipp.app.taskcards.ui.screens.ShareDialog
@@ -37,6 +39,14 @@ import de.hipp.app.taskcards.ui.screens.filter.FilterBottomSheet
 import de.hipp.app.taskcards.ui.viewmodel.ListViewModel
 import de.hipp.app.taskcards.ui.viewmodel.ShareViewModel
 import de.hipp.app.taskcards.ui.viewmodel.factoryOf
+import de.hipp.app.taskcards.ui.viewmodel.list.clearAllFilters
+import de.hipp.app.taskcards.ui.viewmodel.list.deleteSavedSearch
+import de.hipp.app.taskcards.ui.viewmodel.list.saveCurrentSearch
+import de.hipp.app.taskcards.ui.viewmodel.list.setDueDateRange
+import de.hipp.app.taskcards.ui.viewmodel.list.setSearchQuery
+import de.hipp.app.taskcards.ui.viewmodel.list.setStatusFilter
+import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -46,14 +56,14 @@ fun ListScreen(
     onNavigateToListSelector: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
-    val repo = remember { RepositoryProvider.getRepository(context) }
-    val prefsRepo = remember { RepositoryProvider.getPreferencesRepository(context) }
-    val strings = remember { RepositoryProvider.getStringProvider(context) }
+    val repo: TaskListRepository = koinInject()
+    val prefsRepo: PreferencesRepository = koinInject()
+    val strings: StringProvider = koinInject()
     val vm: ListViewModel = viewModel(
         key = "ListVM-$listId",
         factory = factoryOf { ListViewModel(listId, repo, prefsRepo, strings) }
     )
-    val shareVm: ShareViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+    val shareVm: ShareViewModel = koinViewModel()
 
     val state by vm.state.collectAsState()
     val errorState by vm.errorState.collectAsState()

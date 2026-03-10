@@ -79,7 +79,6 @@ jobs:
 
       - name: Verify Coverage Thresholds (90% line, 85% branch)
         run: ./gradlew koverVerify
-        continue-on-error: true  # Allow incremental progress
 
       - name: Upload Coverage Report
         if: always()
@@ -318,7 +317,7 @@ jobs:
           arch: x86_64
           profile: pixel_6
           force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -accel off
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -accel auto
           disable-animations: true
           disk-size: 4096M
           heap-size: 512M

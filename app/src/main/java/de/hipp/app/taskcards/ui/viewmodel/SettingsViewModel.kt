@@ -3,8 +3,6 @@ package de.hipp.app.taskcards.ui.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import de.hipp.app.taskcards.R
 import de.hipp.app.taskcards.data.preferences.PreferencesRepository
 import de.hipp.app.taskcards.di.StringProvider
@@ -19,11 +17,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-@HiltViewModel
-class SettingsViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+class SettingsViewModel(
+    private val context: Context,
     private val preferencesRepo: PreferencesRepository,
     private val strings: StringProvider,
     private val dispatcher: CoroutineDispatcher = Dispatchers.Main
@@ -63,6 +58,11 @@ class SettingsViewModel @Inject constructor(
             initialValue = UiState()
         )
 
+    /**
+     * Enables or disables high-contrast colour mode.
+     *
+     * @param enabled `true` to turn on high contrast, `false` to turn it off.
+     */
     fun setHighContrastMode(enabled: Boolean) {
         viewModelScope.launch(dispatcher) {
             try {
@@ -79,6 +79,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Enables or disables daily reminder notifications globally.
+     * Schedules or cancels the daily reminder worker accordingly.
+     *
+     * @param enabled `true` to enable reminders, `false` to cancel them.
+     */
     fun setRemindersEnabled(enabled: Boolean) {
         viewModelScope.launch(dispatcher) {
             try {
@@ -108,6 +114,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Updates the time at which the daily reminder fires and reschedules the worker.
+     *
+     * @param hour Hour of the day (0–23).
+     * @param minute Minute of the hour (0–59).
+     */
     fun setReminderTime(hour: Int, minute: Int) {
         viewModelScope.launch(dispatcher) {
             try {
@@ -132,6 +144,11 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Enables or disables the notification sound for reminders.
+     *
+     * @param enabled `true` to play sound, `false` for silent notifications.
+     */
     fun setNotificationSound(enabled: Boolean) {
         viewModelScope.launch(dispatcher) {
             try {
@@ -148,6 +165,11 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Enables or disables vibration for reminder notifications.
+     *
+     * @param enabled `true` to vibrate, `false` for no vibration.
+     */
     fun setNotificationVibration(enabled: Boolean) {
         viewModelScope.launch(dispatcher) {
             try {
@@ -164,6 +186,11 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Persists the chosen UI language without triggering activity recreation.
+     *
+     * @param languageCode BCP-47 language tag (e.g. "en", "de") or "system" for the device default.
+     */
     fun setLanguage(languageCode: String) {
         viewModelScope.launch(dispatcher) {
             try {
@@ -203,6 +230,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /** Clears the current error message. */
     fun clearError() {
         _errorState.value = null
     }

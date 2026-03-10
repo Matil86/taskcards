@@ -280,42 +280,30 @@ fun clearError() {
 
 ## Dependency Injection
 
-### Hilt Configuration
+### Koin Configuration
 
-The app uses Hilt for dependency injection with gradual migration from legacy `RepositoryProvider` object.
+The app uses Koin 4.1.1 for dependency injection. Repository bindings delegate to `RepositoryProvider`, which is the single source of truth for auth-aware repository switching (Room for offline/unauthenticated, Firestore once authenticated).
 
-**AppModule** (`di/AppModule.kt`):
+**appModule** (`di/KoinModules.kt`):
 ```kotlin
-@Module
-@InstallIn(SingletonComponent::class)
-object AppModule {
-
-    @Provides
-    @Singleton
-    fun provideTaskListRepository(
-        @ApplicationContext context: Context
-    ): TaskListRepository {
-        return RoomTaskListRepository(context)
-    }
-
-    @Provides
-    @Singleton
-    fun providePreferencesRepository(
-        @ApplicationContext context: Context
-    ): PreferencesRepository {
-        return PreferencesRepository(context.preferencesDataStore)
-    }
+val appModule = module {
+    single<PreferencesRepository> { RepositoryProvider.getPreferencesRepository(androidContext()) }
+    single<TaskListRepository> { RepositoryProvider.getRepository(androidContext()) }
+    single { ReminderScheduler(androidContext()) }
+    single { QRCodeGenerator() }
 }
 ```
 
 **ViewModel Injection**:
 ```kotlin
-@HiltViewModel
-class ListViewModel @Inject constructor(
-    private val taskRepo: TaskListRepository,
-    private val prefsRepo: PreferencesRepository
-) : ViewModel() {
-    // ViewModel implementation
+val viewModelModule = module {
+    viewModel { parameters ->
+        ListViewModel(
+            savedStateHandle = parameters.get(),
+            repo = get(),
+            prefsRepo = get()
+        )
+    }
 }
 ```
 
@@ -341,7 +329,7 @@ object RepositoryProvider {
 }
 ```
 
-**Migration Strategy**: Gradually replacing `RepositoryProvider` with Hilt-injected repositories.
+**Worker Injection**: Both `ReminderWorker` and `DailyReminderWorker` are registered via `workerOf(::ReminderWorker)` and `workerOf(::DailyReminderWorker)` in the Koin `workerModule`, receiving their dependencies through Koin rather than `RepositoryProvider`.
 
 ---
 
@@ -501,9 +489,9 @@ object ReminderScheduler {
 **ReminderWorker** (`worker/ReminderWorker.kt`):
 ```kotlin
 class ReminderWorker(
-    context: Context,
-    params: WorkerParameters
-) : Worker(context, params) {
+    private val context: Context,
+    params: WorkerParameters,
+) : CoroutineWorker(context, params), KoinComponent {
 
     override fun doWork(): Result {
         val taskId = inputData.getString("taskId") ?: return Result.failure()
@@ -618,19 +606,19 @@ object DailyReminderScheduler {
 
 ```kotlin
 class DailyReminderWorker(
-    context: Context,
-    params: WorkerParameters
-) : CoroutineWorker(context, params) {
+    private val context: Context,
+    params: WorkerParameters,
+) : CoroutineWorker(context, params), KoinComponent {
+
+    private val preferencesRepository: PreferencesRepository by inject()
+    private val taskListRepository: TaskListRepository by inject()
 
     override suspend fun doWork(): Result {
-        val prefsRepo = RepositoryProvider.getPreferencesRepository(applicationContext)
         val settings = prefsRepo.getSettings().first()
 
         if (!settings.remindersEnabled) {
             return Result.success()
         }
-
-        val taskRepo = RepositoryProvider.getRepository(applicationContext)
         val tasks = taskRepo.observeTasks(Constants.DEFAULT_LIST_ID).first()
         val activeTasks = tasks.count { !it.isDone && !it.isRemoved }
 
@@ -1021,7 +1009,7 @@ This ensures all Compose libraries use compatible versions.
 - **Navigation**: navigation-compose 2.8.3
 - **Coroutines**: 1.9.0
 - **Room**: room-runtime-ktx 2.6.1
-- **Hilt**: hilt-android (version from libs.versions.toml)
+- **Koin**: koin-android 4.1.1, koin-androidx-compose, koin-androidx-workmanager
 - **WorkManager**: work-runtime-ktx 2.9.0
 - **Glance**: glance-appwidget 1.1.0, glance-material3 1.1.0
 - **Firebase BOM**: firebase-bom 33.5.1
@@ -1356,7 +1344,7 @@ service cloud.firestore {
 }
 ```
 
-**Security Model**: Collaborative lists (any authenticated user can access any list). For user isolation, see [FIRESTORE_RULES_DEPLOYMENT.md](../FIRESTORE_RULES_DEPLOYMENT.md).
+**Security Model**: Collaborative lists (any authenticated user can access any list). For user isolation, see [FIRESTORE_RULES_DEPLOYMENT.md](FIRESTORE_RULES_DEPLOYMENT.md).
 
 ### Google Sign-In
 
@@ -1583,7 +1571,7 @@ For complete release documentation, see:
 
 1. **Multi-Module**: Split into :app, :data, :domain, :ui modules
 2. **Clean Architecture**: Strict use cases layer
-3. **Full Hilt Migration**: Remove RepositoryProvider legacy code
+3. **RepositoryProvider Cleanup**: Remove legacy RepositoryProvider and move repository lifecycle fully into Koin modules
 4. **Offline-First with Sync Queue**: Better offline handling
 5. **Pagination**: For very large task lists (1000+ tasks)
 
@@ -1599,7 +1587,7 @@ For complete release documentation, see:
 - [WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager)
 - [Jetpack Glance](https://developer.android.com/jetpack/compose/glance)
 - [Firebase Firestore](https://firebase.google.com/docs/firestore)
-- [Hilt Dependency Injection](https://developer.android.com/training/dependency-injection/hilt-android)
+- [Koin Dependency Injection](https://insert-koin.io/docs/quickstart/android)
 
 ### Testing Resources
 - [Kotest Documentation](https://kotest.io/)

@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import de.hipp.app.taskcards.model.ShareableList
 import de.hipp.app.taskcards.model.ShareableTask
 import de.hipp.app.taskcards.model.TaskItem
@@ -15,8 +14,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-
 /**
  * UI state for the share dialog.
  */
@@ -31,8 +28,7 @@ data class ShareUiState(
  * ViewModel for managing task and list sharing functionality.
  * Generates deep links and QR codes for sharing.
  */
-@HiltViewModel
-class ShareViewModel @Inject constructor(
+class ShareViewModel(
     private val qrGenerator: QRCodeGenerator
 ) : ViewModel() {
 

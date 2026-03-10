@@ -13,6 +13,11 @@ val BrandBlue = Color(0xFF4EA8DE)
 val BrandBlueLight = Color(0xFF7BC4F0)
 val BrandBlueDark = Color(0xFF2D89C0)
 
+// Signature Accent — Warm Amber: distinctive against the purple-blue palette
+val BrandAmber = Color(0xFFE8A020)      // Warm amber — for badges, highlights, CTAs
+val BrandAmberDark = Color(0xFFBF8010)
+val BrandAmberLight = Color(0xFFF0C060)
+
 // Accent Colors
 val AccentPink = Color(0xFFFF6B9D)
 val AccentOrange = Color(0xFFFF9F43)

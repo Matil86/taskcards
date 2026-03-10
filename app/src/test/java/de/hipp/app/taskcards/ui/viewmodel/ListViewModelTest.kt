@@ -8,6 +8,13 @@ import de.hipp.app.taskcards.di.StringProvider
 import de.hipp.app.taskcards.model.DueDateRange
 import de.hipp.app.taskcards.model.SavedSearch
 import de.hipp.app.taskcards.model.StatusFilter
+import de.hipp.app.taskcards.ui.viewmodel.list.applySavedSearch
+import de.hipp.app.taskcards.ui.viewmodel.list.clearAllFilters
+import de.hipp.app.taskcards.ui.viewmodel.list.deleteSavedSearch
+import de.hipp.app.taskcards.ui.viewmodel.list.saveCurrentSearch
+import de.hipp.app.taskcards.ui.viewmodel.list.setDueDateRange
+import de.hipp.app.taskcards.ui.viewmodel.list.setSearchQuery
+import de.hipp.app.taskcards.ui.viewmodel.list.setStatusFilter
 import de.hipp.app.taskcards.util.Constants
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldContainExactly

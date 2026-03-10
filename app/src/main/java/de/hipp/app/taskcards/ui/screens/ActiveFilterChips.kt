@@ -20,8 +20,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
+import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import de.hipp.app.taskcards.R
 import de.hipp.app.taskcards.model.SearchFilter
 import de.hipp.app.taskcards.model.StatusFilter
+import de.hipp.app.taskcards.ui.theme.BrandAmber
+import de.hipp.app.taskcards.ui.theme.BrandAmberDark
 
 /**
  * Displays active filter criteria as dismissible chips below the search bar.
@@ -49,6 +53,7 @@ fun ActiveFilterChips(
     onClearAll: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val onSurface = MaterialTheme.colorScheme.onSurface
     AnimatedVisibility(
         visible = !filter.isEmpty(),
         enter = expandVertically(
@@ -90,7 +95,13 @@ fun ActiveFilterChips(
                                 ),
                                 modifier = Modifier.size(18.dp)
                             )
-                        }
+                        },
+                        colors = InputChipDefaults.inputChipColors(
+                            selectedContainerColor = BrandAmber.copy(alpha = 0.18f),
+                            selectedLabelColor = onSurface,
+                            selectedTrailingIconColor = BrandAmberDark,
+                            selectedLeadingIconColor = BrandAmberDark
+                        )
                     )
                 }
 
@@ -109,7 +120,13 @@ fun ActiveFilterChips(
                                 ),
                                 modifier = Modifier.size(18.dp)
                             )
-                        }
+                        },
+                        colors = InputChipDefaults.inputChipColors(
+                            selectedContainerColor = BrandAmber.copy(alpha = 0.18f),
+                            selectedLabelColor = onSurface,
+                            selectedTrailingIconColor = BrandAmberDark,
+                            selectedLeadingIconColor = BrandAmberDark
+                        )
                     )
                 }
             }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -20,12 +21,17 @@ import kotlinx.coroutines.test.setMain
 @OptIn(ExperimentalCoroutinesApi::class)
 class CardsViewModelTest : StringSpec({
     val testDispatcher = StandardTestDispatcher()
+    // viewModelScope uses Dispatchers.Main.immediate internally. Setting Main to
+    // UnconfinedTestDispatcher (sharing the same scheduler) ensures the ViewModel's
+    // stateIn / WhileSubscribed coroutines run eagerly in tests and don't require
+    // additional advanceUntilIdle() calls to propagate state — fixing CI flakiness.
+    val unconfinedDispatcher = UnconfinedTestDispatcher(testDispatcher.scheduler)
     lateinit var repo: InMemoryTaskListRepository
     lateinit var strings: MockCardsStringProvider
     lateinit var vm: CardsViewModel
 
     beforeTest {
-        Dispatchers.setMain(testDispatcher)
+        Dispatchers.setMain(unconfinedDispatcher)
         repo = InMemoryTaskListRepository(testDispatcher)
         strings = MockCardsStringProvider()
         vm = CardsViewModel(

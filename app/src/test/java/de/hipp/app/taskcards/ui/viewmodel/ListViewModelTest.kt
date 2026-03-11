@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -44,6 +45,7 @@ private class TestRepositoryException(message: String) : Exception(message)
 @OptIn(ExperimentalCoroutinesApi::class)
 class ListViewModelTest : StringSpec({
     val testDispatcher = StandardTestDispatcher()
+    val unconfinedDispatcher = UnconfinedTestDispatcher(testDispatcher.scheduler)
     lateinit var mockRepo: InMemoryTaskListRepository
     lateinit var mockPrefsRepo: MockPreferencesRepository
     lateinit var mockStrings: MockStringProvider
@@ -56,7 +58,7 @@ class ListViewModelTest : StringSpec({
     }
 
     beforeTest {
-        Dispatchers.setMain(testDispatcher)
+        Dispatchers.setMain(unconfinedDispatcher)
         mockRepo = InMemoryTaskListRepository(testDispatcher)
         mockPrefsRepo = MockPreferencesRepository()
         mockStrings = MockStringProvider()

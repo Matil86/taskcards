@@ -30,7 +30,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -44,21 +43,21 @@ private class TestRepositoryException(message: String) : Exception(message)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ListViewModelTest : StringSpec({
-    val testDispatcher = StandardTestDispatcher()
-    val unconfinedDispatcher = UnconfinedTestDispatcher(testDispatcher.scheduler)
+    val testDispatcher = UnconfinedTestDispatcher()
     lateinit var mockRepo: InMemoryTaskListRepository
     lateinit var mockPrefsRepo: MockPreferencesRepository
     lateinit var mockStrings: MockStringProvider
     lateinit var viewModel: ListViewModel
 
-    // Helper to wait for state updates and return latest state
+    // Helper to return latest state — with UnconfinedTestDispatcher no advancing needed
+    // but kept for readability and to advance virtual time past any delays if needed
     suspend fun waitForState(): ListViewModel.UiState {
         testDispatcher.scheduler.advanceUntilIdle()
         return viewModel.state.value
     }
 
     beforeTest {
-        Dispatchers.setMain(unconfinedDispatcher)
+        Dispatchers.setMain(testDispatcher)
         mockRepo = InMemoryTaskListRepository(testDispatcher)
         mockPrefsRepo = MockPreferencesRepository()
         mockStrings = MockStringProvider()

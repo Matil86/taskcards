@@ -3,6 +3,9 @@ package de.hipp.app.taskcards.ui.screens.list
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +31,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -51,8 +55,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import de.hipp.app.taskcards.R
 import de.hipp.app.taskcards.ui.theme.AccentGreen
-import de.hipp.app.taskcards.ui.theme.BrandPurple
+import de.hipp.app.taskcards.ui.theme.CrimsonAccent
 import de.hipp.app.taskcards.ui.theme.Dimensions
+import de.hipp.app.taskcards.ui.theme.Felt400
+import de.hipp.app.taskcards.ui.theme.Felt50
+import de.hipp.app.taskcards.ui.theme.Felt700
+import de.hipp.app.taskcards.ui.theme.GoldAction
+import de.hipp.app.taskcards.ui.theme.GoldCardText
+import de.hipp.app.taskcards.ui.theme.Verdant400
 import de.hipp.app.taskcards.ui.theme.focusIndicator
 
 @Composable
@@ -64,6 +74,7 @@ fun TaskCard(
     scale: Float = 1f,
     isDragging: Boolean = false,
     dragOffset: Float = 0f,
+    dueDate: Long? = null,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     taskId: String = "",
@@ -127,35 +138,35 @@ fun TaskCard(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isDragging) {
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                Felt700.copy(alpha = 0.85f)
             } else {
-                MaterialTheme.colorScheme.surface
+                Felt700
             }
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = elevation
         ),
         border = BorderStroke(
-            width = if (isDragging) 3.dp else 1.dp,
+            width = if (isDragging) 2.dp else 1.dp,
             brush = if (isDragging) {
                 Brush.linearGradient(
                     colors = listOf(
-                        BrandPurple,
-                        BrandPurple.copy(alpha = 0.6f)
+                        GoldAction,
+                        GoldAction.copy(alpha = 0.6f)
                     )
                 )
             } else {
                 Brush.linearGradient(
                     colors = listOf(
                         when {
-                            done -> AccentGreen.copy(alpha = 0.3f)
-                            removed -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                            done -> AccentGreen.copy(alpha = 0.25f)
+                            removed -> MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+                            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)
                         },
                         when {
-                            done -> AccentGreen.copy(alpha = 0.3f)
-                            removed -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                            done -> AccentGreen.copy(alpha = 0.25f)
+                            removed -> MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+                            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)
                         }
                     )
                 )
@@ -215,11 +226,39 @@ fun TaskCard(
                     fontWeight = if (done) FontWeight.Normal else FontWeight.Medium,
                     textDecoration = if (done) TextDecoration.LineThrough else TextDecoration.None,
                     color = if (done) {
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                        Felt400
                     } else {
-                        MaterialTheme.colorScheme.onSurface
+                        Felt50
                     }
                 )
+                // Due date badge — show only if task has a due date
+                dueDate?.let { dueDateMs ->
+                    val today = System.currentTimeMillis()
+                    val dayInMs = 86_400_000L
+                    val badgeColor = when {
+                        dueDateMs < today -> CrimsonAccent
+                        dueDateMs < today + dayInMs -> Verdant400
+                        else -> GoldCardText
+                    }
+                    val dateText = when {
+                        dueDateMs < today + dayInMs && dueDateMs >= today -> "Today"
+                        else -> remember(dueDateMs) {
+                            SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(dueDateMs))
+                        }
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = badgeColor.copy(alpha = 0.12f),
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        Text(
+                            text = dateText,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = badgeColor,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
             }
 
             if (removed) {

@@ -2,6 +2,7 @@ package de.hipp.app.taskcards.util
 
 import android.content.Context
 import android.content.res.Configuration
+import android.content.res.Resources
 import android.os.Build
 import java.util.Locale
 
@@ -42,11 +43,18 @@ object LocaleHelper {
             "ja" -> Locale.forLanguageTag("ja")
             "en" -> Locale.forLanguageTag("en")
             "system" -> {
-                // Get system default locale
+                // Use Resources.getSystem() for the TRUE device locale.
+                // Locale.getDefault() is unreliable here: setLocale() calls
+                // Locale.setDefault() which overwrites the JVM default, so
+                // getDefault() would return our previously selected language
+                // instead of the actual system locale.
+                // Resources.getSystem() reads Android's own configuration
+                // which is never affected by Locale.setDefault().
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    Locale.getDefault(Locale.Category.DISPLAY)
+                    Resources.getSystem().configuration.locales[0]
                 } else {
-                    Locale.getDefault()
+                    @Suppress("DEPRECATION")
+                    Resources.getSystem().configuration.locale
                 }
             }
             else -> Locale.ENGLISH // Fallback to English for unsupported locales

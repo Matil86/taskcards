@@ -27,6 +27,7 @@
     <string name="cards_draw_first">Erste Karte ziehen</string>
     <string name="cards_draw_next">Nächste Karte ziehen</string>
     <string name="cards_draw_button">Karte ziehen</string>
+    <string name="cards_remove_task_action">Aufgabe entfernen</string>
 
     <!-- List Screen -->
     <string name="list_title">Alle Aufgaben</string>
@@ -89,6 +90,7 @@
 
     <!-- Common Actions -->
     <string name="action_dismiss">Schließen</string>
+    <string name="close">Schließen</string>
 
     <!-- Cards Screen - Empty State -->
     <string name="cards_empty_message">Du hast alle Aufgaben erledigt.</string>
@@ -105,6 +107,11 @@
     <string name="cards_deck_count_accessibility">Stapel mit %1$d verbleibenden Karten. Nach oben wischen, um die nächste Karte zu ziehen.</string>
     <string name="cards_draw_up_arrow">↑</string>
     <string name="cards_draw_card_label">Karte ziehen</string>
+    <string name="cards_swipe_later_label">Später ↩</string>
+    <string name="cards_swipe_done_label">Erledigt ✓</string>
+    <string name="cards_swipe_remove_label">Entfernen ✕</string>
+    <string name="cards_action_skip">Aufgabe überspringen</string>
+    <string name="cards_action_mark_done">Als erledigt markieren</string>
 
     <!-- List Screen - Dialogs -->
     <string name="list_load_dialog_description">Gib eine Listen-ID ein, um gemeinsam an Aufgaben zu arbeiten.</string>
@@ -113,6 +120,11 @@
     <string name="list_dragging_indicator">Ziehen…</string>
     <string name="list_task_description">Aufgabe %1$s</string>
     <string name="list_task_completed_description">Erledigt</string>
+    <string name="list_task_active_state">Aktiv</string>
+    <string name="list_task_completed_state">Erledigt</string>
+    <string name="list_task_removed_state">Entfernt</string>
+    <string name="list_task_with_state">%1$s. %2$s</string>
+    <string name="list_task_full_description">Aufgabe: %1$s. Status: %2$s</string>
 
     <!-- List Screen - Header -->
     <string name="list_header_completed">%1$d/%2$d erledigt</string>
@@ -129,6 +141,12 @@
     <string name="auth_sign_in_button">Mit Google anmelden</string>
     <string name="auth_signing_in">Wird angemeldet…</string>
     <string name="auth_error">Anmeldung fehlgeschlagen. Bitte erneut versuchen.</string>
+    <string name="auth_cloud_collaboration">Cloud-Kollaboration</string>
+    <string name="auth_signed_in_as">Angemeldet als:</string>
+    <string name="auth_unknown_user">Unbekannt</string>
+    <string name="auth_synced_description">Aufgaben werden in der Cloud synchronisiert. Teile eine Listen-ID zur Zusammenarbeit.</string>
+    <string name="auth_sign_out">Abmelden</string>
+    <string name="auth_local_only_description">Nur lokaler Speicher aktiv. Anmelden für Cloud-Sync und Kollaboration.</string>
 
     <!-- List Selector Screen -->
     <string name="list_selector_title">Meine Listen</string>
@@ -146,6 +164,7 @@
     <string name="list_selector_delete_button">Löschen</string>
     <string name="list_selector_confirm_button">Bestätigen</string>
     <string name="list_selector_list_card_description">Liste %1$s mit %2$d Aufgaben</string>
+    <string name="list_default_name">Meine Aufgaben</string>
     <string name="switch_list">Liste wechseln</string>
     <string name="error_failed_to_create_list">Erstellen fehlgeschlagen: %s</string>
     <string name="error_failed_to_rename_list">Umbenennen fehlgeschlagen: %s</string>
@@ -196,6 +215,7 @@
     <!-- Deep Link Sharing -->
     <string name="share_task_title">Aufgabe teilen</string>
     <string name="share_list_title">Liste teilen</string>
+    <string name="share_list_description">Liste mit QR-Code teilen</string>
     <string name="share_button">Teilen</string>
     <string name="share_copy_link">Kopieren</string>
     <string name="share_qr_code">QR-Code</string>
@@ -204,6 +224,8 @@
 
     <!-- QR Code -->
     <string name="qr_code_title">QR-Code</string>
+    <string name="generate_qr_code">QR-Code erstellen</string>
+    <string name="qr_code_description">QR-Code zum Teilen</string>
     <string name="qr_code_scan_description">Scanne diesen Code, um die Aufgabe oder Liste zu importieren</string>
     <string name="qr_code_save_to_gallery">In Galerie speichern</string>
     <string name="qr_code_generating">QR-Code wird generiert…</string>

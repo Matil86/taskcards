@@ -19,7 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.hipp.app.taskcards.R
-import de.hipp.app.taskcards.ui.theme.BrandPurple
+import de.hipp.app.taskcards.ui.theme.GoldAction
 
 /**
  * Loading screen shown during app startup while determining navigation destination.
@@ -45,7 +45,7 @@ fun StartupLoadingScreen() {
         ) {
             CircularProgressIndicator(
                 modifier = Modifier.size(48.dp),
-                color = BrandPurple
+                color = GoldAction
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(

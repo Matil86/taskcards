@@ -4,11 +4,9 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,10 +26,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -47,8 +46,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.hipp.app.taskcards.R
-import de.hipp.app.taskcards.ui.theme.BrandBlue
-import de.hipp.app.taskcards.ui.theme.BrandPurple
+import de.hipp.app.taskcards.ui.theme.CardStock
+import de.hipp.app.taskcards.ui.theme.GoldAction
+import de.hipp.app.taskcards.ui.theme.InkPrimary
 
 private const val V_SWIPE_UP_THRESHOLD = 64f
 
@@ -76,6 +76,19 @@ fun DeckStack(
         modifier = modifier
             .testTag("DeckStack")
             .scale(deckScale)
+            // Gesture on outer Box so the whole area (card backs + box) responds to swipe-up
+            .pointerInput(layers) {
+                var totalDy = 0f
+                detectDragGestures(
+                    onDragStart = { totalDy = 0f; isPressed = true },
+                    onDragCancel = { totalDy = 0f; isPressed = false },
+                    onDragEnd = {
+                        if (totalDy < -V_SWIPE_UP_THRESHOLD) onSwipeUp()
+                        totalDy = 0f
+                        isPressed = false
+                    },
+                ) { _, dragAmount -> totalDy += dragAmount.y }
+            }
             .semantics {
                 role = Role.Button
                 liveRegion = LiveRegionMode.Polite
@@ -104,7 +117,9 @@ fun DeckStack(
             },
         contentAlignment = Alignment.BottomCenter
     ) {
-        // Cards sticking out of the box at the top
+        // ── Cards emerging from the box ─────────────────────────────────────────
+        // Cards are rendered FIRST so the box renders ON TOP, hiding the bottom
+        // portion of each card — creating the illusion they slide out of the slot.
         if (clamped > 0) {
             Box(
                 modifier = Modifier
@@ -113,183 +128,131 @@ fun DeckStack(
                     .align(Alignment.TopCenter),
                 contentAlignment = Alignment.TopCenter
             ) {
-                // Stack of cards sticking out
                 repeat(clamped) { index ->
                     val backIndex = (clamped - index - 1)
-                    val verticalOffset = -60 - (backIndex * 8) // Stick out above the box
-                    val horizontalInset = backIndex * 4
-                    val alpha = 1f - (backIndex * 0.1f)
+                    // Smaller offset = more card hidden inside the box → emerge effect
+                    val verticalOffset = -28 - (backIndex * 7)
+                    val horizontalInset = backIndex * 5
+                    val alpha = 1f - (backIndex * 0.08f)
 
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(100.dp)
+                            .height(80.dp)
                             .padding(
-                                start = (20 + horizontalInset).dp,
-                                end = (20 + horizontalInset).dp
+                                start = (16 + horizontalInset).dp,
+                                end = (16 + horizontalInset).dp
                             )
                             .offset(y = verticalOffset.dp)
                             .alpha(alpha)
+                            // Performance: drawWithCache pre-computes all diagonal line coordinates
+                            // once when size changes and caches them. Only the onDrawBehind lambda
+                            // re-executes on subsequent recompositions, avoiding repeated allocation
+                            // of Offset pairs on every Firestore-triggered recomposition.
+                            .drawWithCache {
+                                // Capture size in CacheDrawScope before entering buildList
+                                // (buildList changes `this` receiver, losing DrawScope.size access)
+                                val w = size.width
+                                val h = size.height
+                                val lineSpacing = 8.dp.toPx()
+                                val lineColor = InkPrimary.copy(alpha = 0.08f)
+                                val strokeWidth = 0.8.dp.toPx()
+                                val lines = buildList {
+                                    var x = -h
+                                    while (x < w + h) {
+                                        add(Offset(x, 0f) to Offset(x + h, h))
+                                        x += lineSpacing
+                                    }
+                                    var x2 = w + h
+                                    while (x2 > -h) {
+                                        add(Offset(x2, 0f) to Offset(x2 - h, h))
+                                        x2 -= lineSpacing
+                                    }
+                                }
+                                onDrawBehind {
+                                    lines.forEach { (start, end) ->
+                                        drawLine(color = lineColor, start = start, end = end, strokeWidth = strokeWidth)
+                                    }
+                                }
+                            }
                             .testTag("DeckLayer"),
-                        shape = RoundedCornerShape(18.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        tonalElevation = (3 + backIndex * 2).dp,
-                        shadowElevation = (4 + backIndex * 2).dp,
+                        shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
+                        color = CardStock,
+                        tonalElevation = 0.dp,
+                        shadowElevation = (4 + backIndex).dp,
                         border = BorderStroke(
-                            width = 2.dp,
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    BrandPurple.copy(alpha = 0.8f),
-                                    BrandBlue.copy(alpha = 0.8f)
-                                )
-                            )
+                            width = 1.dp,
+                            color = InkPrimary.copy(alpha = 0.18f)
                         )
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.verticalGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.primary.copy(
-                                                alpha = 0.2f
-                                            ),
-                                            MaterialTheme.colorScheme.primaryContainer,
-                                            MaterialTheme.colorScheme.primary.copy(
-                                                alpha = 0.15f
-                                            )
-                                        )
-                                    )
-                                )
-                        )
-                        Canvas(modifier = Modifier.fillMaxSize()) {
-                            val lineSpacing = 12.dp.toPx()
-                            // alpha is already applied to the parent Surface via .alpha(alpha);
-                            // using a fixed value here avoids doubling the alpha multiplication
-                            // and prevents the Canvas from being re-executed just because alpha
-                            // changes during the deckScale animation.
-                            val lineColor = BrandPurple.copy(alpha = 0.15f)
-                            val strokeWidth = 1.dp.toPx()
-
-                            // Draw diagonal lines at 45 degrees
-                            var x = -size.height
-                            while (x < size.width + size.height) {
-                                drawLine(
-                                    color = lineColor,
-                                    start = Offset(x, 0f),
-                                    end = Offset(x + size.height, size.height),
-                                    strokeWidth = strokeWidth
-                                )
-                                x += lineSpacing
-                            }
-                        }
+                        // Line drawing moved to drawWithCache on the Surface modifier above
                     }
                 }
             }
         }
 
-        // Box container - the outer card box
+        // ── The Box — renders ON TOP of card bottoms to hide them inside ────────
+        // Gold border makes it clearly visible on the dark felt background.
+        // The box "swallows" the lower portion of each stacked card.
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight()
+                .fillMaxHeight(0.72f)          // Box takes 72% of height; top 28% shows cards emerging
                 .align(Alignment.BottomCenter),
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            tonalElevation = 8.dp,
-            shadowElevation = 12.dp,
+            shape = RoundedCornerShape(16.dp),
+            color = Color(0xFF1A251A),          // Felt750 — slightly lighter than felt bg for contrast
+            tonalElevation = 0.dp,
+            shadowElevation = 20.dp,
             border = BorderStroke(
-                width = 3.dp,
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        BrandPurple.copy(alpha = 0.6f),
-                        BrandBlue.copy(alpha = 0.6f)
-                    )
-                )
+                width = 1.5.dp,
+                color = GoldAction.copy(alpha = 0.35f)  // Gold border — clearly visible on dark felt
             )
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
-                                MaterialTheme.colorScheme.surfaceVariant,
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
-                            )
-                        )
-                    )
-                    .pointerInput(layers) {
-                        var totalDy = 0f
-                        detectDragGestures(
-                            onDragStart = {
-                                totalDy = 0f
-                                isPressed = true
-                            },
-                            onDragCancel = {
-                                totalDy = 0f
-                                isPressed = false
-                            },
-                            onDragEnd = {
-                                // Trigger a single action per gesture if overall movement was upward
-                                if (totalDy < -V_SWIPE_UP_THRESHOLD) {
-                                    onSwipeUp()
-                                }
-                                totalDy = 0f
-                                isPressed = false
-                            },
-                        ) { _, dragAmount ->
-                            totalDy += dragAmount.y
-                        }
-                    }
+                modifier = Modifier.fillMaxSize()
             ) {
-                // Inner shadow effect to create depth
+                // Subtle inner gradient — lighter at top where cards emerge
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(12.dp)
-                ) {
-                    // Opening/slot at the top where cards come out
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.9f)
-                            .height(16.dp)
-                            .align(Alignment.TopCenter)
-                            .offset(y = 8.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Black.copy(alpha = 0.4f),
-                                        Color.Black.copy(alpha = 0.15f)
-                                    )
+                        .background(
+                            Brush.verticalGradient(
+                                0f to Color(0xFF233023),    // Slightly lighter at the slot opening
+                                0.25f to Color(0xFF1A251A), // Settles into box colour
+                                1f to Color(0xFF141E14)     // Darker at bottom = depth
+                            )
+                        )
+                )
+
+                // Slot shadow at top — the opening where cards slide out
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.75f)
+                        .height(6.dp)
+                        .align(Alignment.TopCenter)
+                        .offset(y = (-3).dp)
+                        .clip(RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp))
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.5f),
+                                    Color.Transparent
                                 )
                             )
-                    )
-                }
+                        )
+                )
 
-                // Interactive hint text
+                // Gold draw hint arrow
                 if (clamped > 0 && !isPressed) {
-                    Column(
+                    Text(
+                        text = stringResource(R.string.cards_draw_up_arrow),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Normal,
+                        color = GoldAction.copy(alpha = 0.55f),
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .offset(y = 20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = stringResource(R.string.cards_draw_up_arrow),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                        Text(
-                            text = stringResource(R.string.cards_draw_card_label),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                    }
+                            .offset(y = 16.dp)
+                    )
                 }
             }
         }

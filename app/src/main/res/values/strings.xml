@@ -105,6 +105,12 @@
     <string name="cards_deck_count_accessibility">Deck with %1$d cards remaining. Swipe up to draw the next card.</string>
     <string name="cards_draw_up_arrow">↑</string>
     <string name="cards_draw_card_label">Draw Card</string>
+    <string name="cards_swipe_done_label">Done ✓</string>
+    <string name="cards_swipe_remove_label">Remove ✕</string>
+    <string name="cards_swipe_later_label">Later ↩</string>
+    <string name="cards_remove_task_action">Remove task</string>
+    <string name="cards_action_skip">Skip task</string>
+    <string name="cards_action_mark_done">Mark complete</string>
 
     <!-- List Screen - Dialogs -->
     <string name="list_load_dialog_description">Enter a list ID to load and collaborate on shared tasks.</string>
@@ -138,6 +144,12 @@
     <string name="auth_sign_in_button">Sign In with Google</string>
     <string name="auth_signing_in">Signing in…</string>
     <string name="auth_error">Sign in failed. Please try again.</string>
+    <string name="auth_cloud_collaboration">Cloud Collaboration</string>
+    <string name="auth_signed_in_as">Signed in as:</string>
+    <string name="auth_unknown_user">Unknown</string>
+    <string name="auth_synced_description">Your tasks are synced to the cloud. Share a list ID to collaborate with others.</string>
+    <string name="auth_sign_out">Sign Out</string>
+    <string name="auth_local_only_description">Using local storage only. Sign in to enable cloud sync and collaboration.</string>
 
     <!-- List Selector Screen -->
     <string name="list_selector_title">My Lists</string>
@@ -155,6 +167,7 @@
     <string name="list_selector_delete_button">Delete</string>
     <string name="list_selector_confirm_button">Confirm</string>
     <string name="list_selector_list_card_description">List %1$s with %2$d tasks</string>
+    <string name="list_default_name">My Tasks</string>
     <string name="switch_list">Switch List</string>
     <string name="error_failed_to_create_list">Failed to create list: %s</string>
     <string name="error_failed_to_rename_list">Failed to rename list: %s</string>

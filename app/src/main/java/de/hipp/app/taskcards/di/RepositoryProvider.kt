@@ -10,7 +10,6 @@ import de.hipp.app.taskcards.auth.FirebaseAuthService
 import de.hipp.app.taskcards.data.AppDatabase
 import de.hipp.app.taskcards.data.FirestoreTaskListMetadataRepository
 import de.hipp.app.taskcards.data.FirestoreTaskListRepository
-import de.hipp.app.taskcards.data.InMemoryTaskListMetadataRepository
 import de.hipp.app.taskcards.data.InMemoryTaskListRepository
 import de.hipp.app.taskcards.data.RoomTaskListRepository
 import de.hipp.app.taskcards.data.preferences.PreferencesRepository
@@ -104,22 +103,17 @@ object RepositoryProvider {
 
     /**
      * Get the TaskListMetadataRepository instance.
-     * When authenticated: Uses Firestore for cloud-synchronized list metadata.
-     * When not authenticated: Uses in-memory storage.
+     * Always uses Firestore for cloud-synchronized list metadata.
+     * Unauthenticated users receive an empty list from Firestore (no lists until sign-in).
      * For tests, call setMetadataRepository() to inject a custom implementation.
      */
     fun getMetadataRepository(context: Context): TaskListMetadataRepository {
         return taskListMetadataRepository ?: synchronized(this) {
             taskListMetadataRepository ?: run {
-                if (isAuthenticated) {
-                    Log.d(TAG, "Using Firestore metadata repository for collaborative lists")
-                    FirestoreTaskListMetadataRepository(
-                        firestore = FirebaseFirestore.getInstance()
-                    )
-                } else {
-                    Log.d(TAG, "Using in-memory metadata repository for local storage (not authenticated)")
-                    InMemoryTaskListMetadataRepository()
-                }
+                Log.d(TAG, "Using Firestore metadata repository")
+                FirestoreTaskListMetadataRepository(
+                    firestore = FirebaseFirestore.getInstance()
+                )
             }.also {
                 taskListMetadataRepository = it
             }

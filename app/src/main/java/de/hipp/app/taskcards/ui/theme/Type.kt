@@ -17,6 +17,8 @@ private val provider = GoogleFont.Provider(
     R.array.com_google_android_gms_fonts_certs
 )
 
+// ── Display / Headline / Title ────────────────────────────────────────────────
+// Outfit — kept for backwards compatibility; used only if needed in decorative contexts.
 private val outfitFont = GoogleFont("Outfit")
 
 val OutfitFontFamily = FontFamily(
@@ -26,8 +28,31 @@ val OutfitFontFamily = FontFamily(
     Font(googleFont = outfitFont, fontProvider = provider, weight = FontWeight.Bold),
 )
 
+// ── Body / Label — DM Sans ────────────────────────────────────────────────────
+private val dmSansFont = GoogleFont("DM Sans")
+
+val DmSansFontFamily = FontFamily(
+    Font(googleFont = dmSansFont, fontProvider = provider, weight = FontWeight.Normal),
+    Font(googleFont = dmSansFont, fontProvider = provider, weight = FontWeight.Medium),
+    Font(googleFont = dmSansFont, fontProvider = provider, weight = FontWeight.SemiBold),
+    Font(googleFont = dmSansFont, fontProvider = provider, weight = FontWeight.Bold),
+)
+
+// ── Card face text — Playfair Display ─────────────────────────────────────────
+// Used directly in TaskCard (cards/TaskCard.kt) — not in the global Typography object.
+// Playfair Display has the proportions of a book-printed serif: ink contrast, elegant
+// wedge serifs, the feeling of a printed card.
+private val playfairFont = GoogleFont("Playfair Display")
+
+val PlayfairFontFamily = FontFamily(
+    Font(googleFont = playfairFont, fontProvider = provider, weight = FontWeight.Normal),
+    Font(googleFont = playfairFont, fontProvider = provider, weight = FontWeight.Medium),
+    Font(googleFont = playfairFont, fontProvider = provider, weight = FontWeight.SemiBold),
+    Font(googleFont = playfairFont, fontProvider = provider, weight = FontWeight.Bold),
+)
+
 val Typography = Typography(
-    // Display styles - for hero/large content
+    // Display styles — Outfit for large hero text
     displayLarge = TextStyle(
         fontFamily = OutfitFontFamily,
         fontWeight = FontWeight.Bold,
@@ -50,7 +75,7 @@ val Typography = Typography(
         letterSpacing = 0.sp
     ),
 
-    // Headline styles - for main titles
+    // Headline styles — Outfit for main titles
     headlineLarge = TextStyle(
         fontFamily = OutfitFontFamily,
         fontWeight = FontWeight.Bold,
@@ -73,7 +98,7 @@ val Typography = Typography(
         letterSpacing = 0.sp
     ),
 
-    // Title styles - for section headers
+    // Title styles — Outfit for section headers
     titleLarge = TextStyle(
         fontFamily = OutfitFontFamily,
         fontWeight = FontWeight.SemiBold,
@@ -96,46 +121,46 @@ val Typography = Typography(
         letterSpacing = 0.1.sp
     ),
 
-    // Body styles - for main content
+    // Body styles — DM Sans for UI content
     bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = DmSansFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
     ),
     bodyMedium = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = DmSansFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.25.sp
     ),
     bodySmall = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = DmSansFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.4.sp
     ),
 
-    // Label styles - for UI components
+    // Label styles — DM Sans for UI components
     labelLarge = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = DmSansFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp
     ),
     labelMedium = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = DmSansFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.5.sp
     ),
     labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = DmSansFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
         lineHeight = 16.sp,

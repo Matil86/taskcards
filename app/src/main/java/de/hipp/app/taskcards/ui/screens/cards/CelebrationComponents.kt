@@ -40,7 +40,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import de.hipp.app.taskcards.R
-import de.hipp.app.taskcards.ui.theme.AccentGreen
 import de.hipp.app.taskcards.ui.theme.Dimensions
 import kotlinx.coroutines.delay
 
@@ -76,7 +75,7 @@ fun CompletionCelebration(modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.Filled.CheckCircle,
             contentDescription = stringResource(R.string.cards_all_completed),
-            tint = AccentGreen,
+            tint = MaterialTheme.colorScheme.secondary,
             modifier = Modifier
                 .size(120.dp)
                 .scale(animatedScale)
@@ -155,7 +154,7 @@ fun CelebrationOverlay() {
         Icon(
             imageVector = Icons.Filled.CheckCircle,
             contentDescription = stringResource(R.string.cards_task_completed),
-            tint = AccentGreen,
+            tint = MaterialTheme.colorScheme.secondary,
             modifier = Modifier
                 .size(120.dp)
                 .scale(animatedScale)

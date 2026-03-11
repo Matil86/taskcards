@@ -32,8 +32,8 @@ import androidx.compose.ui.unit.dp
 import de.hipp.app.taskcards.R
 import de.hipp.app.taskcards.model.SearchFilter
 import de.hipp.app.taskcards.model.StatusFilter
-import de.hipp.app.taskcards.ui.theme.BrandAmber
-import de.hipp.app.taskcards.ui.theme.BrandAmberDark
+import de.hipp.app.taskcards.ui.theme.Gold400
+import de.hipp.app.taskcards.ui.theme.Gold600
 
 /**
  * Displays active filter criteria as dismissible chips below the search bar.
@@ -97,10 +97,10 @@ fun ActiveFilterChips(
                             )
                         },
                         colors = InputChipDefaults.inputChipColors(
-                            selectedContainerColor = BrandAmber.copy(alpha = 0.18f),
+                            selectedContainerColor = Gold400.copy(alpha = 0.18f),
                             selectedLabelColor = onSurface,
-                            selectedTrailingIconColor = BrandAmberDark,
-                            selectedLeadingIconColor = BrandAmberDark
+                            selectedTrailingIconColor = Gold600,
+                            selectedLeadingIconColor = Gold600
                         )
                     )
                 }
@@ -122,10 +122,10 @@ fun ActiveFilterChips(
                             )
                         },
                         colors = InputChipDefaults.inputChipColors(
-                            selectedContainerColor = BrandAmber.copy(alpha = 0.18f),
+                            selectedContainerColor = Gold400.copy(alpha = 0.18f),
                             selectedLabelColor = onSurface,
-                            selectedTrailingIconColor = BrandAmberDark,
-                            selectedLeadingIconColor = BrandAmberDark
+                            selectedTrailingIconColor = Gold600,
+                            selectedLeadingIconColor = Gold600
                         )
                     )
                 }

@@ -1,6 +1,9 @@
 package de.hipp.app.taskcards.data
 
 import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import de.hipp.app.taskcards.data.preferences.PreferencesRepository
@@ -118,7 +121,7 @@ class FirestoreTaskListRepository(
                     "removed" to task.removed,
                     "dueDate" to task.dueDate,
                     "reminderType" to task.reminderType.name,
-                    "timestamp" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                    "timestamp" to FieldValue.serverTimestamp()
                 )
 
                 docRef.set(taskData).await()
@@ -203,13 +206,13 @@ class FirestoreTaskListRepository(
     }
 
     override suspend fun getActiveListCount(): Int {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return 0
         return try {
-            // Count all lists in the top-level collection
-            val snapshot = firestore.collection(COLLECTION_LISTS)
+            firestore.collection(COLLECTION_LISTS)
+                .whereArrayContains("contributors", userId)
                 .get()
                 .await()
-
-            snapshot.size()
+                .size()
         } catch (e: Exception) {
             Log.e(TAG, "Error getting active list count", e)
             0
@@ -286,7 +289,7 @@ class FirestoreTaskListRepository(
      * Helper to parse a Firestore document into a TaskItem.
      * Returns null if parsing fails.
      */
-    private fun parseTaskDocument(doc: com.google.firebase.firestore.DocumentSnapshot, listId: String): TaskItem? {
+    private fun parseTaskDocument(doc: DocumentSnapshot, listId: String): TaskItem? {
         return try {
             TaskItem(
                 id = doc.id,

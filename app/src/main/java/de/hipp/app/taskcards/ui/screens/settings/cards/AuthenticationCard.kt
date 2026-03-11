@@ -13,8 +13,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import de.hipp.app.taskcards.R
 
 @Composable
 fun AuthenticationCard(
@@ -38,7 +40,7 @@ fun AuthenticationCard(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Cloud Collaboration",
+                text = stringResource(R.string.auth_cloud_collaboration),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -46,18 +48,18 @@ fun AuthenticationCard(
 
             if (isAuthenticated) {
                 Text(
-                    text = "Signed in as:",
+                    text = stringResource(R.string.auth_signed_in_as),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = userEmail ?: "Unknown",
+                    text = userEmail ?: stringResource(R.string.auth_unknown_user),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Your tasks are synced to Firestore. Share list IDs to collaborate with others.",
+                    text = stringResource(R.string.auth_synced_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -65,11 +67,11 @@ fun AuthenticationCard(
                     onClick = onSignOutClick,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Sign Out")
+                    Text(stringResource(R.string.auth_sign_out))
                 }
             } else {
                 Text(
-                    text = "Currently using local storage only. Sign in to enable cloud sync and collaboration.",
+                    text = stringResource(R.string.auth_local_only_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -77,7 +79,7 @@ fun AuthenticationCard(
                     onClick = onSignInClick,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Sign In with Google")
+                    Text(stringResource(R.string.auth_sign_in_button))
                 }
             }
         }

@@ -15,6 +15,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import de.hipp.app.taskcards.R
 import de.hipp.app.taskcards.ui.screens.settings.formatTime24Hour
 import de.hipp.app.taskcards.ui.theme.Dimensions
+import de.hipp.app.taskcards.ui.theme.GoldAction
 import de.hipp.app.taskcards.ui.theme.focusIndicator
 
 @Composable
@@ -111,6 +113,12 @@ fun NotificationSettingsCard(
                     checked = remindersEnabled,
                     onCheckedChange = onRemindersToggle,
                     enabled = canScheduleExactAlarms,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = GoldAction,
+                        checkedTrackColor = GoldAction.copy(alpha = 0.3f),
+                        uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
                     modifier = Modifier
                         .sizeIn(
                             minWidth = Dimensions.MinTouchTarget,
@@ -177,6 +185,12 @@ fun NotificationSettingsCard(
                     Switch(
                         checked = notificationSound,
                         onCheckedChange = onNotificationSoundToggle,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = GoldAction,
+                            checkedTrackColor = GoldAction.copy(alpha = 0.3f),
+                            uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
                         modifier = Modifier
                             .sizeIn(
                                 minWidth = Dimensions.MinTouchTarget,
@@ -207,6 +221,12 @@ fun NotificationSettingsCard(
                     Switch(
                         checked = notificationVibration,
                         onCheckedChange = onNotificationVibrationToggle,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = GoldAction,
+                            checkedTrackColor = GoldAction.copy(alpha = 0.3f),
+                            uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
                         modifier = Modifier
                             .sizeIn(
                                 minWidth = Dimensions.MinTouchTarget,

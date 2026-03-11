@@ -63,7 +63,7 @@ A beautifully designed Android task management app built with Jetpack Compose fe
 - Configurable widget preferences
 
 ### 🎨 Premium Design
-- Material3 design with custom brand colors (purple/blue/amber palette)
+- Material3 design with custom brand colors (dark felt green, card-stock ivory, gold, and crimson (Velvet Table design system))
 - Smooth spring-based animations throughout
 - Gradient backgrounds and borders
 - Elevated shadows and depth effects

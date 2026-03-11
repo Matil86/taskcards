@@ -77,6 +77,7 @@ Key principles:
 | Repository interfaces | `app/src/main/java/de/hipp/app/taskcards/data/` |
 | Room impl | `data/RoomTaskListRepository.kt`, `data/AppDatabase.kt` |
 | Firestore impl | `data/FirestoreTaskListRepository.kt`, `data/FirestoreTaskListMetadataRepository.kt` |
+| Firestore rules | `firestore.rules` (deploy via Firebase CLI) |
 | Koin modules | `app/src/main/java/de/hipp/app/taskcards/di/KoinModules.kt` |
 | Auth-aware provider | `app/src/main/java/de/hipp/app/taskcards/di/RepositoryProvider.kt` |
 | Reminder pipeline | `app/src/main/java/de/hipp/app/taskcards/worker/ReminderScheduler.kt` |
@@ -134,6 +135,83 @@ In composable screens, use `koinInject<TaskListRepository>()` (not `remember { R
 - **Parallelism**: up to 3 test classes concurrently, `maxParallelForks` = CPU count
 - **Instrumented**: `./gradlew connectedAndroidTest` (requires emulator or device)
 - Repository implementations are testable via `RepositoryProvider.setRepository(...)` / `RepositoryProvider.setMetadataRepository(...)`.
+
+---
+
+## Design Identity
+
+TaskCards uses the **Velvet Table** visual theme — a warm, tactile aesthetic inspired by felt game tables and aged card stock.
+
+### Color Palette
+
+| Token | Hex | Role |
+|---|---|---|
+| `FeltBackground` | `#111811` | App background (dark green felt) |
+| `CardStock` | `#F7F3EC` | Card surface (warm off-white) |
+| `GoldAction` | `#E8B020` | Primary actions, highlights; Settings switches accent |
+| `GoldCardText` | — | Due date badge: upcoming tasks |
+| `CrimsonAccent` | `#C41E1E` | Destructive actions, urgent indicators; due date badge: overdue tasks |
+| `Verdant400` | — | Due date badge: tasks due today |
+
+### Component Notes
+
+- **Empty states**: `EmptyListsState` uses the Velvet Table style — a card outline illustration rendered on the felt background, consistent with the overall tactile theme.
+- **Due date badges on TaskCards**: displayed on list-view `TaskCard` items with color-coded backgrounds — `CrimsonAccent` (overdue), `Verdant400` (due today), `GoldCardText` (upcoming).
+- **Settings switches**: use `GoldAction` as the thumb/track accent color.
+
+### Typography
+
+| Font | Usage |
+|---|---|
+| **Outfit** | Display / Headline (app name, screen titles) |
+| **Playfair Display** | Card face text (task content on cards) |
+| **DM Sans** | Body / Label (supporting text, chips, captions) |
+
+Outfit and DM Sans are loaded via the existing GMS Downloadable Fonts provider. Playfair Display is also served through the same provider — no additional dependencies required.
+
+---
+
+## Swipe Behavior (Card Deck)
+
+The card deck screen uses gesture-based task actions:
+
+- Swipe RIGHT → "Later ↩" — card returns to bottom of deck, task stays active
+- Swipe LEFT → "Done ✓" — task marked as complete
+- Swipe UP on deck box → draw next card from deck
+
+---
+
+## Widget Architecture
+
+Three home screen widget types live in the `widget/` package:
+
+- **TaskList** — displays up to 5 tasks from a chosen list
+- **QuickAdd** — one-tap task entry without opening the app
+- **DueToday** — shows all tasks due on the current day
+
+All three are built with Jetpack Glance and update automatically via `WidgetUpdateWorker`.
+
+---
+
+## Firestore Data Model
+
+### `/lists/{listId}`
+
+| Field | Type | Notes |
+|---|---|---|
+| `creatorUid` | `string` | UID of the user who created the list |
+| `contributors` | `array<string>` | UIDs of all users with access (always includes `creatorUid`); used for `whereArrayContains` queries |
+| `name` | `string` | 1–100 characters |
+| `createdAt` | `int` | Unix timestamp (ms) |
+| `lastModifiedAt` | `int` | Unix timestamp (ms) |
+
+- **Contributors model**: a list is accessible to any UID present in the `contributors` array. The creator is always added to `contributors` on creation.
+- **Join via QR code**: unauthenticated-to-contributor join is handled by a Firestore update that only adds the joining user's UID to `contributors` (enforced in `firestore.rules`).
+- **Queries**: `FirestoreTaskListMetadataRepository` uses `whereArrayContains("contributors", uid)` to fetch all lists the signed-in user can access.
+
+### `/lists/{listId}/tasks/{taskId}`
+
+Standard task fields: `text`, `order`, `done`, `removed`, `timestamp`, plus optional `dueDate` (int ms) and `reminderType` (string).
 
 ---
 

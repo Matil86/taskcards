@@ -1577,6 +1577,37 @@ For complete release documentation, see:
 
 ---
 
+## Design System
+
+TaskCards uses the **Velvet Table** design language — a warm, tactile aesthetic inspired by felt game tables and aged card stock.
+
+### Color Palette
+
+| Token | Hex | Role |
+|---|---|---|
+| `FeltBackground` | `#111811` | App background (dark green felt) |
+| `CardStock` | `#F7F3EC` | Card surface (warm off-white) |
+| `GoldAction` | `#E8B020` | Primary actions, FAB, highlights |
+| `CrimsonAccent` | `#C41E1E` | Destructive actions, urgent/overdue indicators |
+
+These tokens replace the earlier `BrandPurple` / `BrandBlue` color references. All Material3 `colorScheme` slots are mapped from these four tokens in `ui/theme/Theme.kt`.
+
+### Typography
+
+| Font | Usage | Provider |
+|---|---|---|
+| **Outfit** | Display / Headline (app name, screen titles) | GMS Downloadable Fonts |
+| **Playfair Display** | Card face text (task content rendered on cards) | GMS Downloadable Fonts |
+| **DM Sans** | Body / Label (supporting text, chips, captions) | GMS Downloadable Fonts |
+
+All three fonts are served via the existing Google Mobile Services Downloadable Fonts provider. No new font dependencies are added to `build.gradle.kts` or `libs.versions.toml`.
+
+### Theme Entry Point
+
+`ui/theme/Theme.kt` applies the Velvet Table palette to a `MaterialTheme`. Screens reference colors exclusively via `MaterialTheme.colorScheme.*` slots — no hardcoded hex values in composables.
+
+---
+
 ## Additional Resources
 
 ### Official Documentation

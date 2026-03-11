@@ -40,4 +40,11 @@ interface TaskListMetadataRepository {
      * @return The list ID, or null if no lists exist
      */
     suspend fun getDefaultListId(): String?
+
+    /**
+     * Ensures a list document exists in the backing store.
+     * Creates it with the given name if absent; does nothing if it already exists.
+     * Safe to call multiple times (idempotent).
+     */
+    suspend fun ensureListExists(listId: String, name: String)
 }

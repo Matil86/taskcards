@@ -14,6 +14,8 @@ import de.hipp.app.taskcards.ui.viewmodel.list.generateListText
 import de.hipp.app.taskcards.util.Logger
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -41,7 +43,7 @@ class CardsViewModel(
         savedStateHandle = SavedStateHandle(mapOf("listId" to listId)),
         repo = repo,
         strings = strings,
-        analytics = object : de.hipp.app.taskcards.analytics.Analytics {
+        analytics = object : Analytics {
             override fun logEvent(eventName: String, params: Map<String, Any>) {
                 // No-op for testing
             }
@@ -124,6 +126,36 @@ class CardsViewModel(
             } catch (e: Exception) {
                 _errorState.value = strings.getString(R.string.error_failed_to_update, e.message ?: "")
                 Logger.e(TAG, { "Error marking task as done" }, e)
+            }
+        }
+    }
+
+    // Debounce job for skipCard — absorbs rapid successive swipes to prevent N+1 Firestore writes
+    private var skipDebounceJob: Job? = null
+
+    /**
+     * Skips the current drawn card — puts it back at the bottom of the deck.
+     * The task stays active (not done, not removed). It will reappear on next draw.
+     *
+     * Uses totalActive (full deck count) as the target index so that tasks beyond
+     * the 5-card visible window are correctly moved to the true end of the deck.
+     * Debounced by 300ms to prevent N+1 Firestore writes from rapid swipe input.
+     */
+    fun skipCard(taskId: String) {
+        skipDebounceJob?.cancel()
+        skipDebounceJob = viewModelScope.launch(dispatcher) {
+            delay(300L)  // 300ms debounce — absorbs rapid swipes before writing to Firestore
+            try {
+                val activeCount = state.value.totalActive  // FIX: was visibleCards.size (capped at 5)
+                repo.moveTask(listId, taskId, activeCount - 1)
+                _errorState.value = null
+                analytics.logEvent(
+                    AnalyticsEvents.SWIPE_GESTURE_USED,
+                    mapOf(AnalyticsParams.GESTURE_TYPE to "skip")
+                )
+            } catch (e: Exception) {
+                _errorState.value = strings.getString(R.string.error_failed_to_update, e.message ?: "")
+                Logger.e(TAG, { "Error skipping card" }, e)
             }
         }
     }

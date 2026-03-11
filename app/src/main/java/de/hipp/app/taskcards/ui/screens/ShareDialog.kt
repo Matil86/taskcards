@@ -38,7 +38,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.hipp.app.taskcards.R
-import de.hipp.app.taskcards.ui.theme.BrandPurple
 import de.hipp.app.taskcards.ui.theme.Dimensions
 
 /**

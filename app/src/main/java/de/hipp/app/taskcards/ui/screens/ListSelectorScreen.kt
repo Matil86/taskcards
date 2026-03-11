@@ -41,7 +41,8 @@ import de.hipp.app.taskcards.ui.screens.listselector.ListCard
 import de.hipp.app.taskcards.ui.screens.listselector.dialogs.CreateListDialog
 import de.hipp.app.taskcards.ui.screens.listselector.dialogs.DeleteListDialog
 import de.hipp.app.taskcards.ui.screens.listselector.dialogs.RenameListDialog
-import de.hipp.app.taskcards.ui.theme.BrandPurple
+import de.hipp.app.taskcards.ui.theme.GoldAction
+import de.hipp.app.taskcards.ui.theme.InkPrimary
 import de.hipp.app.taskcards.ui.viewmodel.ListSelectorViewModel
 import de.hipp.app.taskcards.ui.viewmodel.factoryOf
 
@@ -87,8 +88,8 @@ fun ListSelectorScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showCreateDialog = true },
-                containerColor = BrandPurple,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+                containerColor = GoldAction,
+                contentColor = InkPrimary,
                 modifier = Modifier.semantics {
                     contentDescription = context.getString(R.string.list_selector_create_fab_description)
                 }
@@ -107,7 +108,7 @@ fun ListSelectorScreen(
                 .padding(paddingValues)
         ) {
             if (state.lists.isEmpty()) {
-                EmptyListsState()
+                EmptyListsState(onCreateList = { showCreateDialog = true })
             } else {
                 LazyColumn(
                     modifier = Modifier

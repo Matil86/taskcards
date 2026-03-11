@@ -101,6 +101,10 @@
     <string name="cards_deck_count_accessibility">Deck with %1$d cards remaining. Swipe up to draw the next card.</string>
     <string name="cards_draw_up_arrow">↑</string>
     <string name="cards_draw_card_label">Draw Card</string>
+    <string name="cards_swipe_later_label">Later ↩</string>
+    <string name="cards_swipe_done_label">Done ✓</string>
+    <string name="cards_action_skip">Skip task</string>
+    <string name="cards_action_mark_done">Mark complete</string>
 
     <!-- List Screen - Dialogs -->
     <string name="list_load_dialog_description">Enter a list ID to load and collaborate on shared tasks.</string>

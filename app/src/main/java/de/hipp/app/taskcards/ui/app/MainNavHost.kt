@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import de.hipp.app.taskcards.ui.screens.ListSelectorScreen
 import de.hipp.app.taskcards.ui.screens.cards.CardsScreen
 import de.hipp.app.taskcards.ui.screens.list.ListScreen
 import de.hipp.app.taskcards.ui.screens.settings.SettingsScreen
@@ -20,6 +21,7 @@ internal fun MainNavHost(
     onSignInClick: () -> Unit,
     onSignOutClick: () -> Unit,
     onLoadList: (String) -> Unit,
+    onDefaultListIdChanged: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -34,7 +36,19 @@ internal fun MainNavHost(
                 ListScreen(
                     listId = defaultListId,
                     onLoadList = onLoadList,
-                    onNavigateToListSelector = null
+                    onNavigateToListSelector = {
+                        navController.navigate("list_selector")
+                    }
+                )
+            }
+            composable("list_selector") {
+                ListSelectorScreen(
+                    onListSelected = { listId ->
+                        onDefaultListIdChanged(listId)
+                        navController.navigate("list") {
+                            popUpTo("list_selector") { inclusive = true }
+                        }
+                    }
                 )
             }
             composable("settings") {

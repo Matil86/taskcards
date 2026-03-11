@@ -2,11 +2,15 @@ package de.hipp.app.taskcards.deeplink
 
 import android.net.Uri
 import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import de.hipp.app.taskcards.data.TaskListMetadataRepository
 import de.hipp.app.taskcards.data.TaskListRepository
 import de.hipp.app.taskcards.model.ShareableList
 import de.hipp.app.taskcards.model.ShareableTask
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.tasks.await
 
 /**
  * Handles deep link processing and task/list import operations.
@@ -64,6 +68,21 @@ class DeepLinkHandler(
         if (pathSegments.isNotEmpty()) {
             val listId = pathSegments[0]
             Log.d(TAG, "Navigating to list ID: $listId")
+
+            // Add current user as contributor (idempotent arrayUnion)
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            if (currentUser != null) {
+                try {
+                    val db = FirebaseFirestore.getInstance()
+                    db.collection("lists").document(listId)
+                        .update("contributors", FieldValue.arrayUnion(currentUser.uid))
+                        .await()
+                    Log.d(TAG, "Added ${currentUser.uid} as contributor to list $listId")
+                } catch (e: Exception) {
+                    Log.d(TAG, "Could not add as contributor: ${e.message}")
+                }
+            }
+
             return DeepLinkResult.NavigateToList(listId)
         }
 

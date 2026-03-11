@@ -20,15 +20,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import de.hipp.app.taskcards.ui.theme.AccentGreen
-import de.hipp.app.taskcards.ui.theme.ErrorRed
+import androidx.compose.material3.MaterialTheme
+import de.hipp.app.taskcards.ui.theme.CrimsonAccent
 
 @Composable
 fun SwipeBackground(direction: SwipeToDismissBoxValue?) {
     val color by animateColorAsState(
         targetValue = when (direction) {
-            SwipeToDismissBoxValue.StartToEnd -> ErrorRed.copy(alpha = 0.8f) // Swipe right = remove (red)
-            SwipeToDismissBoxValue.EndToStart -> AccentGreen.copy(alpha = 0.8f) // Swipe left = restore (green)
+            SwipeToDismissBoxValue.StartToEnd -> CrimsonAccent.copy(alpha = 0.8f) // Swipe right = remove (crimson)
+            SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f) // Swipe left = restore (green)
             else -> Color.Transparent
         },
         label = "swipe-bg-color",

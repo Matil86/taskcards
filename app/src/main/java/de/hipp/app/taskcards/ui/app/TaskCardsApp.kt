@@ -1,5 +1,13 @@
 package de.hipp.app.taskcards.ui.app
 
+import android.Manifest
+import android.app.AlarmManager
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import de.hipp.app.taskcards.R
 import de.hipp.app.taskcards.di.RepositoryProvider
 import de.hipp.app.taskcards.ui.theme.TaskCardsTheme
@@ -21,8 +30,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+/**
+ * Root composable for the TaskCards application.
+ * Handles notification channels, permission requests (POST_NOTIFICATIONS and
+ * SCHEDULE_EXACT_ALARM), authentication state, daily reminders, and theming.
+ *
+ * @param initialDeepLinkUri Optional deep link URI to process on startup
+ */
 @Composable
-fun TaskCardsApp(initialDeepLinkUri: android.net.Uri? = null) {
+fun TaskCardsApp(initialDeepLinkUri: Uri? = null) {
     val context = LocalContext.current
 
     // Create notification channels on app start
@@ -44,15 +60,36 @@ fun TaskCardsApp(initialDeepLinkUri: android.net.Uri? = null) {
         }
     }
 
+    // POST_NOTIFICATIONS is still required after the WorkManager→AlarmManager migration:
+    // ReminderAlarmReceiver uses NotificationManagerCompat.notify() to show the
+    // notification when the alarm fires — this requires POST_NOTIFICATIONS on Android 13+.
     // Request notification permission on first launch (Android 13+)
     LaunchedEffect(Unit) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            if (androidx.core.content.ContextCompat.checkSelfPermission(
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
                     context,
-                    android.Manifest.permission.POST_NOTIFICATIONS
-                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
             ) {
-                notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    // Request SCHEDULE_EXACT_ALARM at startup (Android 12+).
+    // Required for AlarmManager.setExactAndAllowWhileIdle() used by ReminderScheduler.
+    // Requested after POST_NOTIFICATIONS so dialogs appear sequentially.
+    val scheduleExactAlarmLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { /* permission state re-checked in SettingsScreen on resume */ }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            if (!alarmManager.canScheduleExactAlarms()) {
+                scheduleExactAlarmLauncher.launch(
+                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                )
             }
         }
     }

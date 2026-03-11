@@ -26,9 +26,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.hipp.app.taskcards.R
+import de.hipp.app.taskcards.data.TaskListMetadataRepository
 import de.hipp.app.taskcards.data.TaskListRepository
 import de.hipp.app.taskcards.data.preferences.PreferencesRepository
 import de.hipp.app.taskcards.di.StringProvider
@@ -59,6 +61,13 @@ fun ListScreen(
     val repo: TaskListRepository = koinInject()
     val prefsRepo: PreferencesRepository = koinInject()
     val strings: StringProvider = koinInject()
+    val metadataRepo: TaskListMetadataRepository = koinInject()
+
+    // Observe all lists and find the name of the current one
+    val allLists by metadataRepo.observeTaskLists()
+        .collectAsState(initial = emptyList())
+    val currentListName = allLists.firstOrNull { it.id == listId }?.name
+        ?: stringResource(R.string.list_default_name)
     val vm: ListViewModel = viewModel(
         key = "ListVM-$listId",
         factory = factoryOf { ListViewModel(listId, repo, prefsRepo, strings) }
@@ -121,6 +130,7 @@ fun ListScreen(
             // Modern header with stats
             ListHeader(
                 listId = listId,
+                listName = currentListName,
                 taskCount = state.tasks.count { !it.removed },
                 doneCount = state.tasks.count { it.done && !it.removed },
                 hasActiveFilters = !state.searchFilter.isEmpty(),

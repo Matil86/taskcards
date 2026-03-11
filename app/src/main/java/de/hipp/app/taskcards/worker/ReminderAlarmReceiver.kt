@@ -44,9 +44,17 @@ class ReminderAlarmReceiver : BroadcastReceiver(), KoinComponent {
         val dueDate = intent.getLongExtra(KEY_DUE_DATE, 0L)
 
         val pendingResult = goAsync()
+        // Guard: if Koin is not initialized (cold-start — OS revived the process only for this
+        // BroadcastReceiver, Application.onCreate() has not yet run), inject() on preferencesRepository
+        // will throw NoBeanDefinitionException and silently swallow the alarm. We wrap the coroutine
+        // in a broad catch so the alarm is never silently lost. Chosen approach: log a warning and
+        // skip the notification rather than rescheduling, because the alarm manager will re-fire
+        // on the next scheduled trigger and a 30s retry risks duplicate notifications.
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 showNotification(context, taskId, listId, taskText, dueDate)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to show notification (possible Koin cold-start or missing permission)", e)
             } finally {
                 pendingResult.finish()
             }

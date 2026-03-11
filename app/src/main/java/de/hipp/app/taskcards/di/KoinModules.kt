@@ -10,13 +10,7 @@ package de.hipp.app.taskcards.di
  * correct repository implementation regardless of authentication state.
  */
 
-import com.google.firebase.firestore.FirebaseFirestore
 import de.hipp.app.taskcards.analytics.Analytics
-import de.hipp.app.taskcards.data.AppDatabase
-import de.hipp.app.taskcards.data.FirestoreTaskListMetadataRepository
-import de.hipp.app.taskcards.data.FirestoreTaskListRepository
-import de.hipp.app.taskcards.data.InMemoryTaskListMetadataRepository
-import de.hipp.app.taskcards.data.RoomTaskListRepository
 import de.hipp.app.taskcards.data.TaskListMetadataRepository
 import de.hipp.app.taskcards.data.TaskListRepository
 import de.hipp.app.taskcards.data.preferences.PreferencesRepository
@@ -43,29 +37,12 @@ val appModule = module {
     single<Analytics> { RepositoryProvider.getAnalytics() }
     single<CoroutineDispatcher> { Dispatchers.Main }
     single { ReminderScheduler(androidContext()) }
-    factory<TaskListRepository> {
-        if (RepositoryProvider.isAuthenticated()) {
-            FirestoreTaskListRepository(
-                firestore = FirebaseFirestore.getInstance(),
-                reminderScheduler = get(),
-                preferencesRepo = get()
-            )
-        } else {
-            val db = AppDatabase.getInstance(androidContext())
-            RoomTaskListRepository(
-                dao = db.taskDao(),
-                reminderScheduler = get(),
-                preferencesRepo = get()
-            )
-        }
-    }
-    factory<TaskListMetadataRepository> {
-        if (RepositoryProvider.isAuthenticated()) {
-            FirestoreTaskListMetadataRepository(firestore = FirebaseFirestore.getInstance())
-        } else {
-            InMemoryTaskListMetadataRepository()
-        }
-    }
+    // factory<> (not single<>) is intentional: RepositoryProvider already caches repos
+    // internally with synchronized locking. factory ensures each injection gets the
+    // current auth-aware implementation — critical for real-time Firestore sync.
+    // single<> would cache RoomRepository at startup and never switch to Firestore after login.
+    factory<TaskListRepository> { RepositoryProvider.getRepository(androidContext()) }
+    factory<TaskListMetadataRepository> { RepositoryProvider.getMetadataRepository(androidContext()) }
     single { DeepLinkHandler(get(), get()) }
     single { QRCodeGenerator() }
 }

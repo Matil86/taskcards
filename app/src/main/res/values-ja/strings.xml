@@ -27,6 +27,7 @@
     <string name="cards_draw_first">最初のカードを引く</string>
     <string name="cards_draw_next">次のカードを引く</string>
     <string name="cards_draw_button">カードを引く</string>
+    <string name="cards_remove_task_action">タスクを削除</string>
 
     <!-- List Screen -->
     <string name="list_title">すべてのタスク</string>
@@ -89,6 +90,7 @@
 
     <!-- Common Actions -->
     <string name="action_dismiss">閉じる</string>
+    <string name="close">閉じる</string>
 
     <!-- Cards Screen - Empty State -->
     <string name="cards_empty_message">すべてのタスクを完了しました。</string>
@@ -105,6 +107,11 @@
     <string name="cards_deck_count_accessibility">残り%1$d枚のカードがあるデッキ。上にスワイプして次のカードを引く。</string>
     <string name="cards_draw_up_arrow">↑</string>
     <string name="cards_draw_card_label">カードを引く</string>
+    <string name="cards_swipe_later_label">後で ↩</string>
+    <string name="cards_swipe_done_label">完了 ✓</string>
+    <string name="cards_swipe_remove_label">削除 ✕</string>
+    <string name="cards_action_skip">タスクをスキップ</string>
+    <string name="cards_action_mark_done">完了にする</string>
 
     <!-- List Screen - Dialogs -->
     <string name="list_load_dialog_description">リストIDを入力して、共有タスクで共同作業。</string>
@@ -113,6 +120,11 @@
     <string name="list_dragging_indicator">ドラッグ中…</string>
     <string name="list_task_description">タスク %1$s</string>
     <string name="list_task_completed_description">完了</string>
+    <string name="list_task_active_state">アクティブ</string>
+    <string name="list_task_completed_state">完了</string>
+    <string name="list_task_removed_state">削除済み</string>
+    <string name="list_task_with_state">%1$s。%2$s</string>
+    <string name="list_task_full_description">タスク: %1$s。状態: %2$s</string>
 
     <!-- List Screen - Header -->
     <string name="list_header_completed">%1$d/%2$d 完了</string>
@@ -129,6 +141,12 @@
     <string name="auth_sign_in_button">Googleでサインイン</string>
     <string name="auth_signing_in">サインイン中…</string>
     <string name="auth_error">サインインに失敗しました。もう一度お試しください。</string>
+    <string name="auth_cloud_collaboration">クラウド連携</string>
+    <string name="auth_signed_in_as">サインイン中:</string>
+    <string name="auth_unknown_user">不明</string>
+    <string name="auth_synced_description">タスクはクラウドに同期されています。リストIDを共有して共同作業できます。</string>
+    <string name="auth_sign_out">サインアウト</string>
+    <string name="auth_local_only_description">現在はローカル保存のみ。クラウド同期と共同作業にはサインインしてください。</string>
 
     <!-- List Selector Screen -->
     <string name="list_selector_title">マイリスト</string>
@@ -146,6 +164,7 @@
     <string name="list_selector_delete_button">削除</string>
     <string name="list_selector_confirm_button">確認</string>
     <string name="list_selector_list_card_description">リスト %1$s (%2$d タスク)</string>
+    <string name="list_default_name">マイタスク</string>
     <string name="switch_list">リストを切り替え</string>
     <string name="error_failed_to_create_list">作成に失敗しました: %s</string>
     <string name="error_failed_to_rename_list">名前の変更に失敗しました: %s</string>
@@ -196,6 +215,7 @@
     <!-- Deep Link Sharing -->
     <string name="share_task_title">タスクを共有</string>
     <string name="share_list_title">リストを共有</string>
+    <string name="share_list_description">QRコードでリストを共有</string>
     <string name="share_button">共有</string>
     <string name="share_copy_link">コピー</string>
     <string name="share_qr_code">QRコード</string>
@@ -204,6 +224,8 @@
 
     <!-- QR Code -->
     <string name="qr_code_title">QRコード</string>
+    <string name="generate_qr_code">QRコードを生成</string>
+    <string name="qr_code_description">共有用QRコード</string>
     <string name="qr_code_scan_description">このコードをスキャンして、タスクまたはリストをインポート</string>
     <string name="qr_code_save_to_gallery">ギャラリーに保存</string>
     <string name="qr_code_generating">QRコード生成中…</string>

@@ -22,7 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import de.hipp.app.taskcards.R
-import de.hipp.app.taskcards.ui.theme.BrandPurple
+import de.hipp.app.taskcards.ui.theme.GoldAction
 import de.hipp.app.taskcards.ui.theme.focusIndicator
 
 @Composable
@@ -55,8 +55,8 @@ fun LoadListDialog(
                         .semantics { contentDescription = context.getString(R.string.list_id_input_description) },
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = BrandPurple,
-                        focusedLabelColor = BrandPurple
+                        focusedBorderColor = GoldAction,
+                        focusedLabelColor = GoldAction
                     )
                 )
                 Spacer(Modifier.height(12.dp))

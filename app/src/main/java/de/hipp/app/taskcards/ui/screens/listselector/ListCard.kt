@@ -35,9 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.hipp.app.taskcards.R
 import de.hipp.app.taskcards.model.TaskList
-import de.hipp.app.taskcards.ui.theme.AccentGreen
-import de.hipp.app.taskcards.ui.theme.BrandPurple
 import de.hipp.app.taskcards.ui.theme.Dimensions
+import de.hipp.app.taskcards.ui.theme.Felt800
 import de.hipp.app.taskcards.ui.theme.focusIndicator
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -62,8 +61,8 @@ fun ListCard(
             .shadow(
                 elevation = 4.dp,
                 shape = RoundedCornerShape(Dimensions.CornerRadiusLarge),
-                ambientColor = BrandPurple.copy(alpha = 0.2f),
-                spotColor = BrandPurple.copy(alpha = 0.2f)
+                ambientColor = Felt800.copy(alpha = 0.4f),
+                spotColor = Felt800.copy(alpha = 0.4f)
             )
             .clip(RoundedCornerShape(Dimensions.CornerRadiusLarge))
             .combinedClickable(
@@ -112,7 +111,7 @@ fun ListCard(
                         .size(Dimensions.MinTouchTarget)
                         .clip(RoundedCornerShape(Dimensions.CornerRadiusSmall))
                         .focusIndicator(shape = RoundedCornerShape(Dimensions.CornerRadiusSmall)),
-                    color = AccentGreen.copy(alpha = 0.1f),
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
                     shape = RoundedCornerShape(Dimensions.CornerRadiusSmall)
                 ) {
                     Box(
@@ -122,7 +121,7 @@ fun ListCard(
                         Icon(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = stringResource(R.string.list_selector_rename_button),
-                            tint = AccentGreen,
+                            tint = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.size(20.dp)
                         )
                     }

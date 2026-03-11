@@ -27,14 +27,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import de.hipp.app.taskcards.R
-import de.hipp.app.taskcards.ui.theme.BrandPurple
 import de.hipp.app.taskcards.ui.theme.Dimensions
+import de.hipp.app.taskcards.ui.theme.Felt700
+import de.hipp.app.taskcards.ui.theme.GoldAction
+import de.hipp.app.taskcards.ui.theme.InkPrimary
 import de.hipp.app.taskcards.ui.theme.focusIndicator
 
 @Composable
@@ -66,8 +67,8 @@ fun AddItemRow(
                     )
                     .focusIndicator(shape = RoundedCornerShape(12.dp)),
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = BrandPurple.copy(alpha = 0.2f),
-                    contentColor = BrandPurple
+                    containerColor = Felt700,
+                    contentColor = GoldAction
                 )
             ) {
                 Icon(
@@ -88,9 +89,9 @@ fun AddItemRow(
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BrandPurple,
-                    focusedLabelColor = BrandPurple,
-                    cursorColor = BrandPurple
+                    focusedBorderColor = GoldAction,
+                    focusedLabelColor = GoldAction,
+                    cursorColor = GoldAction
                 )
             )
             Spacer(Modifier.width(8.dp))
@@ -101,8 +102,8 @@ fun AddItemRow(
                         text = TextFieldValue("")
                     }
                 },
-                containerColor = if (text.text.isNotBlank()) BrandPurple else MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = if (text.text.isNotBlank()) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                containerColor = if (text.text.isNotBlank()) GoldAction else MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = if (text.text.isNotBlank()) InkPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .size(Dimensions.FabSize)
                     .focusIndicator(shape = RoundedCornerShape(16.dp))

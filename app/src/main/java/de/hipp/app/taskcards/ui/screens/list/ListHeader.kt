@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -33,15 +34,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.hipp.app.taskcards.R
-import de.hipp.app.taskcards.ui.theme.BrandAmber
-import de.hipp.app.taskcards.ui.theme.BrandAmberDark
-import de.hipp.app.taskcards.ui.theme.BrandPurple
 import de.hipp.app.taskcards.ui.theme.Dimensions
+import de.hipp.app.taskcards.ui.theme.Felt700
+import de.hipp.app.taskcards.ui.theme.GoldAction
+import de.hipp.app.taskcards.ui.theme.Gold400
+import de.hipp.app.taskcards.ui.theme.Gold600
 import de.hipp.app.taskcards.ui.theme.focusIndicator
 
 @Composable
 fun ListHeader(
     listId: String,
+    listName: String = "",
     taskCount: Int,
     doneCount: Int,
     hasActiveFilters: Boolean,
@@ -67,7 +70,7 @@ fun ListHeader(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = stringResource(R.string.list_title),
+                    text = listName,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -85,6 +88,25 @@ fun ListHeader(
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Switch list button — only shown when list selector navigation is available
+                if (onNavigateToListSelector != null) {
+                    FilledTonalIconButton(
+                        onClick = onNavigateToListSelector,
+                        modifier = Modifier
+                            .sizeIn(
+                                minWidth = Dimensions.MinTouchTarget,
+                                minHeight = Dimensions.MinTouchTarget
+                            )
+                            .focusIndicator(shape = RoundedCornerShape(12.dp)),
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = GoldAction.copy(alpha = 0.15f),
+                            contentColor = GoldAction
+                        )
+                    ) {
+                        Icon(Icons.Default.SwapHoriz, contentDescription = stringResource(R.string.switch_list))
+                    }
+                }
+
                 // Share button
                 FilledTonalIconButton(
                     onClick = onShareList,
@@ -95,8 +117,8 @@ fun ListHeader(
                         )
                         .focusIndicator(shape = RoundedCornerShape(12.dp)),
                     colors = IconButtonDefaults.filledTonalIconButtonColors(
-                        containerColor = BrandPurple.copy(alpha = 0.2f),
-                        contentColor = BrandPurple
+                        containerColor = Felt700,
+                        contentColor = GoldAction
                     )
                 ) {
                     Icon(Icons.Default.Share, contentDescription = stringResource(R.string.share_list_description))
@@ -113,8 +135,8 @@ fun ListHeader(
                             )
                             .focusIndicator(shape = RoundedCornerShape(12.dp)),
                         colors = IconButtonDefaults.filledTonalIconButtonColors(
-                            containerColor = if (hasActiveFilters) BrandAmber.copy(alpha = 0.18f) else BrandPurple.copy(alpha = 0.2f),
-                            contentColor = if (hasActiveFilters) BrandAmberDark else BrandPurple
+                            containerColor = if (hasActiveFilters) Gold400.copy(alpha = 0.2f) else Felt700,
+                            contentColor = if (hasActiveFilters) Gold600 else GoldAction
                         )
                     ) {
                         Icon(Icons.Default.FilterList, contentDescription = stringResource(R.string.filter_title))
@@ -126,7 +148,7 @@ fun ListHeader(
                                 .align(Alignment.TopEnd)
                                 .offset(x = (-4).dp, y = 4.dp),
                             shape = CircleShape,
-                            color = BrandAmberDark
+                            color = Gold600
                         ) {}
                     }
                 }

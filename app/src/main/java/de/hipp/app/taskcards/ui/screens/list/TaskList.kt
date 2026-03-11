@@ -3,22 +3,31 @@ package de.hipp.app.taskcards.ui.screens.list
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -28,6 +37,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import de.hipp.app.taskcards.ui.theme.GoldAction
 import de.hipp.app.taskcards.R
 import de.hipp.app.taskcards.model.TaskItem
 import de.hipp.app.taskcards.ui.viewmodel.ListViewModel
@@ -73,6 +83,60 @@ fun TaskList(
         }
     }
 
+    if (activeTasks.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // 3 stacked card outlines — staggered
+                Box(contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 80.dp, height = 56.dp)
+                            .offset(x = (-6).dp, y = 6.dp)
+                            .background(
+                                color = GoldAction.copy(alpha = 0.3f),
+                                shape = RoundedCornerShape(6.dp)
+                            )
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(width = 80.dp, height = 56.dp)
+                            .offset(x = 0.dp, y = 0.dp)
+                            .background(
+                                color = GoldAction.copy(alpha = 0.3f),
+                                shape = RoundedCornerShape(6.dp)
+                            )
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(width = 80.dp, height = 56.dp)
+                            .offset(x = 6.dp, y = (-6).dp)
+                            .background(
+                                color = GoldAction.copy(alpha = 0.3f),
+                                shape = RoundedCornerShape(6.dp)
+                            )
+                    )
+                }
+                Text(
+                    text = "Deck is clear",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = GoldAction.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = "Add tasks above to fill your deck",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    } else {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -164,6 +228,7 @@ fun TaskList(
                     scale = if (isDragging) 1.05f else 1f,
                     isDragging = isDragging,
                     dragOffset = 0f, // No visual offset, just rely on animateItemPlacement
+                    dueDate = item.dueDate,
                     onCheckedChange = { vm.toggleDone(item.id, it) },
                     taskId = item.id,
                     modifier = Modifier
@@ -200,4 +265,5 @@ fun TaskList(
             }
         }
     }
+    } // end else (activeTasks not empty)
 }

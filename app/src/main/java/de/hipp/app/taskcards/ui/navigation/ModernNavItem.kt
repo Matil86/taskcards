@@ -28,8 +28,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import de.hipp.app.taskcards.ui.theme.BrandPurple
 import de.hipp.app.taskcards.ui.theme.Dimensions
+import de.hipp.app.taskcards.ui.theme.Felt200
+import de.hipp.app.taskcards.ui.theme.GoldAction
 import de.hipp.app.taskcards.ui.theme.focusIndicator
 
 @Composable
@@ -65,13 +66,13 @@ fun ModernNavItem(
             },
         shape = RoundedCornerShape(Dimensions.CornerRadiusLarge),
         color = if (selected) {
-            BrandPurple.copy(alpha = 0.15f)
+            GoldAction.copy(alpha = 0.15f)
         } else {
             Color.Transparent
         }
     ) {
         Box(
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -81,16 +82,18 @@ fun ModernNavItem(
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    tint = if (selected) BrandPurple else MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = if (selected) GoldAction else Felt200,
                     modifier = Modifier.size(24.dp)
                 )
                 if (selected) {
                     Text(
                         text = label,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = BrandPurple,
-                        modifier = Modifier.padding(start = 8.dp)
+                        color = GoldAction,
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.padding(start = 6.dp)
                     )
                 }
             }

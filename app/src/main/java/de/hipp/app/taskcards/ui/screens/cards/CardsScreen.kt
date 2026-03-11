@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -44,7 +45,11 @@ fun CardsScreen(
     listId: String,
 ) {
     val context = LocalContext.current
-    val repo = remember { RepositoryProvider.getRepository(context) }
+    // Key on listId so the repo is re-fetched whenever the active list changes.
+    // Without the key, the Room instance captured at startup is reused after auth
+    // resolves — CardsViewModel would observe a Firestore listId against Room (no
+    // data) and show the completion-celebration screen incorrectly.
+    val repo = remember(listId) { RepositoryProvider.getRepository(context) }
     val strings = remember { RepositoryProvider.getStringProvider(context) }
     val vm: CardsViewModel = viewModel(
         key = "CardsVM-$listId",
@@ -88,16 +93,20 @@ fun CardsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Gradient background
+            // Felt table surface — solid base with radial vignette for "stage lighting" depth.
+            // Cards in the centre are the focal point; edges naturally recede. No lines, no moiré.
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
                     .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.background,
-                                MaterialTheme.colorScheme.surface
-                            )
+                        Brush.radialGradient(
+                            colorStops = arrayOf(
+                                0.0f to Color.Transparent,
+                                0.7f to Color.Black.copy(alpha = 0.0f),
+                                1.0f to Color.Black.copy(alpha = 0.25f)
+                            ),
+                            radius = Float.POSITIVE_INFINITY
                         )
                     )
             )
@@ -132,10 +141,16 @@ fun CardsScreen(
                     DrawnCardSection(
                         drawn = drawn,
                         state = state,
-                        onDismissed = { taskId ->
+                        onDismissed = { taskId, swipedRight ->
                             drawn = false
-                            showCelebration = true
-                            vm.swipeComplete(taskId, true)
+                            if (swipedRight) {
+                                // Right swipe = skip (keep active, move to bottom of deck)
+                                vm.skipCard(taskId)
+                            } else {
+                                // Left swipe = done (mark complete)
+                                showCelebration = true
+                                vm.swipeComplete(taskId, true)
+                            }
                         }
                     )
 

@@ -44,8 +44,10 @@ private class TestRepositoryException(message: String) : Exception(message)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ListViewModelTest : StringSpec({
-    val testDispatcher = StandardTestDispatcher()
-    val mainDispatcher = UnconfinedTestDispatcher(testDispatcher.scheduler)
+    // Fresh dispatchers per test — sharing a single StandardTestDispatcher across tests causes
+    // accumulated virtual time from WhileSubscribed(5000) timers to interfere with later tests.
+    lateinit var testDispatcher: StandardTestDispatcher
+    lateinit var mainDispatcher: UnconfinedTestDispatcher
     lateinit var mockRepo: InMemoryTaskListRepository
     lateinit var mockPrefsRepo: MockPreferencesRepository
     lateinit var mockStrings: MockStringProvider
@@ -59,6 +61,8 @@ class ListViewModelTest : StringSpec({
     }
 
     beforeTest {
+        testDispatcher = StandardTestDispatcher()
+        mainDispatcher = UnconfinedTestDispatcher(testDispatcher.scheduler)
         Dispatchers.setMain(mainDispatcher)
         mockRepo = InMemoryTaskListRepository(testDispatcher)
         mockPrefsRepo = MockPreferencesRepository()

@@ -36,6 +36,7 @@ import kotlinx.coroutines.test.setMain
 import java.util.Calendar
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@Suppress("LargeClass")
 class ListViewModelTest : FunSpec({
     // Fresh dispatchers per test — sharing a single StandardTestDispatcher across tests causes
     // accumulated virtual time from WhileSubscribed(5000) timers to interfere with later tests.

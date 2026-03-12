@@ -207,31 +207,28 @@ private fun CameraPreviewWithScanner(
                                 return@setAnalyzer
                             }
 
-                            @OptIn(androidx.camera.core.ExperimentalGetImage::class)
-                            run {
-                                val mediaImage = imageProxy.image
-                                if (mediaImage != null) {
-                                    val image = InputImage.fromMediaImage(
-                                        mediaImage,
-                                        imageProxy.imageInfo.rotationDegrees
-                                    )
+                            val mediaImage = imageProxy.image
+                            if (mediaImage != null) {
+                                val image = InputImage.fromMediaImage(
+                                    mediaImage,
+                                    imageProxy.imageInfo.rotationDegrees
+                                )
 
-                                    barcodeScanner.process(image)
-                                        .addOnSuccessListener { barcodes ->
-                                            for (barcode in barcodes) {
-                                                barcode.rawValue?.let { value ->
-                                                    if (hasScanned.compareAndSet(false, true)) {
-                                                        onQRCodeScanned(value)
-                                                    }
+                                barcodeScanner.process(image)
+                                    .addOnSuccessListener { barcodes ->
+                                        for (barcode in barcodes) {
+                                            barcode.rawValue?.let { value ->
+                                                if (hasScanned.compareAndSet(false, true)) {
+                                                    onQRCodeScanned(value)
                                                 }
                                             }
                                         }
-                                        .addOnCompleteListener {
-                                            imageProxy.close()
-                                        }
-                                } else {
-                                    imageProxy.close()
-                                }
+                                    }
+                                    .addOnCompleteListener {
+                                        imageProxy.close()
+                                    }
+                            } else {
+                                imageProxy.close()
                             }
                         }
 

@@ -58,7 +58,7 @@ class StartupViewModel(
                 when {
                     // Last used list exists - use it
                     lastUsedListExists -> {
-                        _destination.value = StartupDestination.OpenList(lastUsedListId!!)
+                        _destination.value = StartupDestination.OpenList(lastUsedListId)
                         Log.d(TAG, "Opening last used list: $lastUsedListId")
                     }
                     // Only one list exists - use it

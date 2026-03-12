@@ -23,6 +23,7 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -144,19 +145,15 @@ fun TaskList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(reorderedTasks, key = { item -> item.id }) { item ->
-            val dismissState = rememberSwipeToDismissBoxState(
-                confirmValueChange = { value ->
-                    when (value) {
-                        SwipeToDismissBoxValue.StartToEnd -> {
-                            vm.remove(item.id); true
-                        }
-                        SwipeToDismissBoxValue.EndToStart -> {
-                            vm.restore(item.id); true
-                        }
-                        else -> false
-                    }
+            val dismissState = rememberSwipeToDismissBoxState()
+
+            LaunchedEffect(dismissState.currentValue) {
+                when (dismissState.currentValue) {
+                    SwipeToDismissBoxValue.StartToEnd -> vm.remove(item.id)
+                    SwipeToDismissBoxValue.EndToStart -> vm.restore(item.id)
+                    SwipeToDismissBoxValue.Settled -> Unit
                 }
-            )
+            }
 
             // Calculate active index from reordered list for correct positioning
             val reorderedActiveTasks = reorderedTasks.filter { !it.removed }

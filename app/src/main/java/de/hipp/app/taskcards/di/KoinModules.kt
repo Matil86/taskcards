@@ -27,8 +27,9 @@ import de.hipp.app.taskcards.worker.ReminderWorker
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.koin.android.ext.koin.androidContext
-import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.androidx.workmanager.dsl.workerOf
+import org.koin.core.module.dsl.viewModel
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val appModule = module {
@@ -48,9 +49,11 @@ val appModule = module {
 }
 
 val viewModelModule = module {
-    viewModel { parameters ->
+    // viewModel{} (from org.koin.core.module.dsl) required for these two: both have a secondary
+    // constructor (listId: String) that causes ambiguity with viewModelOf(::ClassName)
+    viewModel {
         ListViewModel(
-            savedStateHandle = parameters.get(),
+            savedStateHandle = get(),
             repo = get(),
             prefsRepo = get(),
             strings = get(),
@@ -58,25 +61,18 @@ val viewModelModule = module {
             dispatcher = get()
         )
     }
-    viewModel { parameters ->
+    viewModel {
         CardsViewModel(
-            savedStateHandle = parameters.get(),
+            savedStateHandle = get(),
             repo = get(),
             strings = get(),
             analytics = get(),
             dispatcher = get()
         )
     }
-    viewModel { ShareViewModel(get()) }
-    viewModel {
-        SettingsViewModel(
-            context = androidContext(),
-            preferencesRepo = get(),
-            strings = get(),
-            dispatcher = get()
-        )
-    }
-    viewModel { StartupViewModel(get(), get()) }
+    viewModelOf(::ShareViewModel)
+    viewModelOf(::SettingsViewModel)
+    viewModelOf(::StartupViewModel)
 }
 
 val workerModule = module {

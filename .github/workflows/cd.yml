@@ -54,6 +54,14 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
 
+      - name: Cache OWASP NVD database
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/dependency-check-data
+          key: owasp-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: |
+            owasp-${{ runner.os }}-
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 

@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -20,23 +21,24 @@ import kotlinx.coroutines.test.setMain
 /**
  * Tests for CardsViewModel.
  *
- * Uses UnconfinedTestDispatcher for everything (repo, vm dispatcher, setMain, runTest).
- * With UnconfinedTestDispatcher:
- *   - backgroundScope.launch runs immediately (no scheduler advance needed)
- *   - repo operations run immediately (no withContext scheduling delay)
- *   - stateIn/WhileSubscribed propagates immediately once a subscriber joins
- * Delays (e.g. skipCard 300ms debounce) still use virtual time via
- * testDispatcher.scheduler.advanceUntilIdle().
+ * Dispatcher strategy:
+ * - Dispatchers.Main is set to UnconfinedTestDispatcher so that viewModelScope
+ *   (which uses Dispatchers.Main.immediate) propagates state eagerly.
+ * - The repo and vm use StandardTestDispatcher for explicit timing control.
+ * - After backgroundScope.launch, runCurrent() is called to force the
+ *   subscription to be established before any operations — this makes
+ *   WhileSubscribed propagation deterministic in CI.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class CardsViewModelTest : StringSpec({
-    val testDispatcher = UnconfinedTestDispatcher()
+    val testDispatcher = StandardTestDispatcher()
+    val mainDispatcher = UnconfinedTestDispatcher(testDispatcher.scheduler)
     lateinit var repo: InMemoryTaskListRepository
     lateinit var strings: MockCardsStringProvider
     lateinit var vm: CardsViewModel
 
     beforeTest {
-        Dispatchers.setMain(testDispatcher)
+        Dispatchers.setMain(mainDispatcher)
         repo = InMemoryTaskListRepository(testDispatcher)
         strings = MockCardsStringProvider()
         vm = CardsViewModel(
@@ -57,27 +59,25 @@ class CardsViewModelTest : StringSpec({
 
     "skipCard should keep task active and move it to end of order" {
         runTest(testDispatcher) {
-            backgroundScope.launch { vm.state.collect {} }  // activate WhileSubscribed
+            backgroundScope.launch { vm.state.collect {} }
+            testDispatcher.scheduler.runCurrent()  // establish subscription before adding tasks
 
-            // Add three tasks so we can verify the skip-to-end behaviour
             val taskA = repo.addTask(Constants.DEFAULT_LIST_ID, "Task A")
             val taskB = repo.addTask(Constants.DEFAULT_LIST_ID, "Task B")
             val taskC = repo.addTask(Constants.DEFAULT_LIST_ID, "Task C")
+            testDispatcher.scheduler.advanceUntilIdle()
 
-            // Skip Task A (currently the front of the visible deck)
             vm.skipCard(taskA.id)
             testDispatcher.scheduler.advanceUntilIdle()  // advance past 300ms debounce
 
             val state = vm.state.value
             val all = state.visibleCards
 
-            // Task A must still be in the deck (not done, not removed)
             val skippedTask = all.firstOrNull { it.id == taskA.id }
             skippedTask shouldNotBe null
             skippedTask!!.done.shouldBeFalse()
             skippedTask.removed.shouldBeFalse()
 
-            // Task A should now appear after Task B and Task C
             val orderedIds = all.map { it.id }
             val indexA = orderedIds.indexOf(taskA.id)
             val indexB = orderedIds.indexOf(taskB.id)
@@ -90,10 +90,12 @@ class CardsViewModelTest : StringSpec({
     "skipCard should not set error on success" {
         runTest(testDispatcher) {
             backgroundScope.launch { vm.state.collect {} }
+            testDispatcher.scheduler.runCurrent()
 
             repo.addTask(Constants.DEFAULT_LIST_ID, "Single task")
+            testDispatcher.scheduler.advanceUntilIdle()
 
-            vm.skipCard(repo.observeTasks(Constants.DEFAULT_LIST_ID).first().first().id)
+            vm.skipCard(vm.state.value.visibleCards.first().id)
             testDispatcher.scheduler.advanceUntilIdle()
 
             vm.errorState.value.shouldBeNull()
@@ -107,18 +109,19 @@ class CardsViewModelTest : StringSpec({
     "swipeComplete with complete=true should mark task done" {
         runTest(testDispatcher) {
             backgroundScope.launch { vm.state.collect {} }
+            testDispatcher.scheduler.runCurrent()
 
             repo.addTask(Constants.DEFAULT_LIST_ID, "Task to complete")
+            testDispatcher.scheduler.advanceUntilIdle()
 
             val task = vm.state.value.visibleCards.first()
 
             vm.swipeComplete(task.id, true)
+            testDispatcher.scheduler.advanceUntilIdle()
 
-            // Task is no longer in visibleCards (done tasks are filtered out)
             val stillVisible = vm.state.value.visibleCards.any { it.id == task.id }
             stillVisible shouldBe false
 
-            // Verify in repo that the task is actually marked done
             val doneTask = repo.observeTasks(Constants.DEFAULT_LIST_ID).first()
                 .firstOrNull { it.id == task.id }
             doneTask shouldNotBe null
@@ -129,10 +132,13 @@ class CardsViewModelTest : StringSpec({
     "swipeComplete with complete=true should not set error on success" {
         runTest(testDispatcher) {
             backgroundScope.launch { vm.state.collect {} }
+            testDispatcher.scheduler.runCurrent()
 
             val task = repo.addTask(Constants.DEFAULT_LIST_ID, "Task")
+            testDispatcher.scheduler.advanceUntilIdle()
 
             vm.swipeComplete(task.id, true)
+            testDispatcher.scheduler.advanceUntilIdle()
 
             vm.errorState.value.shouldBeNull()
         }
@@ -148,11 +154,9 @@ class CardsViewModelTest : StringSpec({
     // tasks for the Firestore list ID → totalActive = 0 → completion celebration
     // shown even though tasks exist.
     //
-    // Contract verified here: CardsViewModel MUST be initialised with a repo that
-    // actually contains tasks for the given listId. When it is, tasks are visible.
-    // When a different repo is used (the stale-repo scenario), tasks are invisible.
-    // The fix in CardsScreen is: `remember(listId) { RepositoryProvider.getRepository() }`
-    // so the repo is re-fetched whenever listId changes.
+    // Contract: CardsViewModel MUST be initialised with a repo that contains tasks
+    // for the given listId. The fix in CardsScreen is:
+    //   remember(listId) { RepositoryProvider.getRepository() }
     // -----------------------------------------------------------------------
 
     "CardsViewModel shows active tasks when repo contains tasks for the given listId" {
@@ -161,6 +165,7 @@ class CardsViewModelTest : StringSpec({
             val correctRepo = InMemoryTaskListRepository(testDispatcher)
             correctRepo.addTask(firestoreListId, "Haushalt")
             correctRepo.addTask(firestoreListId, "Einkaufen")
+            testDispatcher.scheduler.advanceUntilIdle()
 
             val vmCorrect = CardsViewModel(
                 listId = firestoreListId,
@@ -169,8 +174,8 @@ class CardsViewModelTest : StringSpec({
                 dispatcher = testDispatcher
             )
             backgroundScope.launch { vmCorrect.state.collect {} }
+            testDispatcher.scheduler.advanceUntilIdle()
 
-            // Tasks must be visible — this is the acceptance criterion after the fix
             vmCorrect.state.value.totalActive shouldBe 2
             vmCorrect.state.value.visibleCards.map { it.text }.toSet() shouldBe setOf("Haushalt", "Einkaufen")
         }
@@ -180,19 +185,19 @@ class CardsViewModelTest : StringSpec({
         runTest(testDispatcher) {
             val firestoreListId = "firestore-list-abc"
 
-            // Stale repo (Room): has no knowledge of firestoreListId
             val staleRoomRepo = InMemoryTaskListRepository(testDispatcher)
             staleRoomRepo.addTask(Constants.DEFAULT_LIST_ID, "Local task in Room")
+            testDispatcher.scheduler.advanceUntilIdle()
 
             val vmStale = CardsViewModel(
                 listId = firestoreListId,
-                repo = staleRoomRepo, // ← wrong repo — simulates the bug
+                repo = staleRoomRepo,
                 strings = strings,
                 dispatcher = testDispatcher
             )
             backgroundScope.launch { vmStale.state.collect {} }
+            testDispatcher.scheduler.advanceUntilIdle()
 
-            // Stale repo returns nothing for firestoreListId → celebration screen shown incorrectly
             vmStale.state.value.totalActive shouldBe 0
         }
     }

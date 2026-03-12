@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -43,7 +44,8 @@ private class TestRepositoryException(message: String) : Exception(message)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ListViewModelTest : StringSpec({
-    val testDispatcher = UnconfinedTestDispatcher()
+    val testDispatcher = StandardTestDispatcher()
+    val mainDispatcher = UnconfinedTestDispatcher(testDispatcher.scheduler)
     lateinit var mockRepo: InMemoryTaskListRepository
     lateinit var mockPrefsRepo: MockPreferencesRepository
     lateinit var mockStrings: MockStringProvider
@@ -57,7 +59,7 @@ class ListViewModelTest : StringSpec({
     }
 
     beforeTest {
-        Dispatchers.setMain(testDispatcher)
+        Dispatchers.setMain(mainDispatcher)
         mockRepo = InMemoryTaskListRepository(testDispatcher)
         mockPrefsRepo = MockPreferencesRepository()
         mockStrings = MockStringProvider()
@@ -82,6 +84,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Test task")
             testDispatcher.scheduler.advanceUntilIdle()
@@ -98,6 +101,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("  Task with spaces  ")
             val state = waitForState()
@@ -130,6 +134,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Task to remove")
             val state1 = waitForState()
@@ -148,6 +153,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Task to restore")
             val state1 = waitForState()
@@ -169,6 +175,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Task to complete")
             val state1 = waitForState()
@@ -190,6 +197,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Task")
             val state1 = waitForState()
@@ -211,6 +219,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Task A")
             viewModel.add("Task B")
@@ -234,6 +243,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Buy groceries")
             viewModel.add("Read book")
@@ -253,6 +263,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("UPPERCASE TASK")
             viewModel.add("lowercase task")
@@ -271,6 +282,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Task 1")
             viewModel.add("Task 2")
@@ -302,6 +314,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Task with @special #characters")
             viewModel.add("Normal task")
@@ -320,6 +333,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Aufgabe mit Umlauten äöü")
             viewModel.add("日本語のタスク")
@@ -341,6 +355,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Active task")
             viewModel.add("Done task")
@@ -368,6 +383,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Active task")
             viewModel.add("Done task")
@@ -398,6 +414,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Active task")
             testDispatcher.scheduler.advanceUntilIdle()
@@ -424,6 +441,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Active task")
             testDispatcher.scheduler.advanceUntilIdle()
@@ -452,6 +470,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             val today = Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, 12)
@@ -497,6 +516,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             val today = Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, 12)
@@ -544,6 +564,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             // Note: InMemoryTaskListRepository validates that due dates cannot be in the past
             // This is intentional for production use. For testing overdue functionality,
@@ -588,6 +609,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             viewModel.add("Buy groceries")
             testDispatcher.scheduler.advanceUntilIdle()
@@ -617,6 +639,7 @@ class ListViewModelTest : StringSpec({
             backgroundScope.launch {
                 viewModel.state.collect {}
             }
+            testDispatcher.scheduler.runCurrent()
 
             val today = Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, 12)

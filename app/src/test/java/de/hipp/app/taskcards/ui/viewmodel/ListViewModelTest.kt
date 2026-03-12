@@ -46,8 +46,10 @@ private class TestRepositoryException(message: String) : Exception(message)
 class ListViewModelTest : StringSpec({
     // Fresh dispatchers per test — sharing a single StandardTestDispatcher across tests causes
     // accumulated virtual time from WhileSubscribed(5000) timers to interfere with later tests.
-    lateinit var testDispatcher: StandardTestDispatcher
-    lateinit var mainDispatcher: UnconfinedTestDispatcher
+    // Note: lateinit var is not valid inside a lambda; use var with a placeholder initial value
+    // that is replaced in beforeTest before any test runs.
+    var testDispatcher = StandardTestDispatcher()
+    var mainDispatcher = UnconfinedTestDispatcher(testDispatcher.scheduler)
     lateinit var mockRepo: InMemoryTaskListRepository
     lateinit var mockPrefsRepo: MockPreferencesRepository
     lateinit var mockStrings: MockStringProvider

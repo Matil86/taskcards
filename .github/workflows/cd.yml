@@ -54,14 +54,6 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
 
-      - name: Cache OWASP NVD database
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/dependency-check-data
-          key: owasp-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
-          restore-keys: |
-            owasp-${{ runner.os }}-
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -96,18 +88,6 @@ jobs:
           path: |
             app/build/reports/kover/html/
             app/build/reports/kover/report.xml
-
-      # Security Scanning - Same as CI
-      - name: Run Security Scan (OWASP Dependency Check)
-        run: ./gradlew dependencyCheckAnalyze
-        continue-on-error: true
-
-      - name: Upload OWASP Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cd-owasp-report
-          path: app/build/reports/dependency-check-report.*
 
       - name: Run Static Analysis (Detekt)
         run: ./gradlew detekt

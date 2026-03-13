@@ -1,4 +1,6 @@
 import kotlinx.kover.gradle.plugin.dsl.CoverageUnit
+import java.util.Base64
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -12,6 +14,13 @@ plugins {
     alias(libs.plugins.detekt)
     id("org.jetbrains.kotlinx.kover") version "0.9.7"
 }
+
+val localProperties = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) load(f.inputStream())
+}
+
+fun localOrEnv(key: String): String? = System.getenv(key) ?: localProperties.getProperty(key)
 
 android {
     namespace = "de.hipp.app.taskcards"
@@ -31,10 +40,18 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(System.getenv("RELEASE_KEYSTORE_PATH") ?: "../release.keystore")
-            storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
-            keyAlias = System.getenv("RELEASE_KEY_ALIAS")
-            keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+            val keystoreFile = localOrEnv("RELEASE_KEYSTORE_PATH")?.let { file(it) }
+                ?: localOrEnv("RELEASE_KEYSTORE_BASE64")?.let { b64 ->
+                    val tmp = layout.buildDirectory.file("tmp/release.keystore").get().asFile
+                    tmp.parentFile.mkdirs()
+                    tmp.writeBytes(Base64.getDecoder().decode(b64))
+                    tmp
+                }
+                ?: file("../release.keystore")
+            storeFile = keystoreFile
+            storePassword = localOrEnv("RELEASE_KEYSTORE_PASSWORD")
+            keyAlias = localOrEnv("RELEASE_KEY_ALIAS")
+            keyPassword = localOrEnv("RELEASE_KEY_PASSWORD")
         }
     }
 

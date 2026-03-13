@@ -11,9 +11,11 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
-}
+// foojay-resolver-convention removed: auto-provisioning is disabled
+// (org.gradle.java.installations.auto-download=false in gradle.properties).
+// The plugin was defaulting every vendor-less toolchain request to Azul Zulu,
+// causing "cannot find JDK matching {vendor=Azul Zulu}" failures in CI where
+// only Temurin 21 (setup-java) is available.
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {

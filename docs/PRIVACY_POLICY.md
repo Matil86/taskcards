@@ -1,6 +1,6 @@
 # Privacy Policy for TaskCards
 
-**Last Updated: January 2025**
+**Last Updated: March 2026**
 
 ## Introduction
 
@@ -52,6 +52,14 @@ We request camera access **only when you use the QR code scanner feature** to im
 - **Never uploaded to our servers**
 - **Used only for QR code scanning**
 - **Not stored or recorded**
+
+### 5. Home Screen Widgets
+
+TaskCards offers three optional home screen widgets (TaskList, QuickAdd, DueToday). These widgets:
+- **Read your task data** from local device storage or your Firebase account (if signed in)
+- **Do not transmit any additional data** beyond what the app itself collects
+- **Update automatically** to reflect your current tasks
+- Can be removed at any time from your home screen
 
 ## How We Use Your Information
 
@@ -183,7 +191,7 @@ We will notify you of significant changes via:
 If you have questions about this Privacy Policy or your data, contact us:
 
 **Email:** hippcomputing+taskcards@gmail.com
-**GitHub:** https://github.com/hipp/TaskCards
+**GitHub:** https://github.com/Matil86/taskcards
 
 ## Your Consent
 
@@ -196,6 +204,7 @@ By using TaskCards, you consent to this Privacy Policy.
 - Task data (stored locally or in cloud if signed in)
 - Crash reports and analytics
 - Camera access for QR scanning (processed locally only)
+- Home screen widget data (read-only access to your tasks)
 
 **What We Don't Do:**
 - Sell your data to third parties
@@ -214,3 +223,4 @@ By using TaskCards, you consent to this Privacy Policy.
 **Questions?** Contact us at hippcomputing+taskcards@gmail.com
 
 **Effective Date:** January 2025
+**Last Updated:** March 2026

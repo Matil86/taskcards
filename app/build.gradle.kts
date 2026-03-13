@@ -90,9 +90,6 @@ android {
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
         }
-        // Vendor-agnostic toolchain spec — accepts any JDK 21 (e.g. Temurin in CI, Zulu locally).
-        // jvmToolchain(21) implicitly pins Azul Zulu in KGP 2.x which breaks CI when only
-        // Temurin is available and auto-provisioning is disabled.
         jvmToolchain {
             languageVersion.set(JavaLanguageVersion.of(21))
         }
